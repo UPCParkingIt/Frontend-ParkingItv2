@@ -1,0 +1,166 @@
+<div class="reservation-dialog-container">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Nueva Reservación</h2>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <div class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Loading Parkings -->
+    @if (isLoadingParkings()) {
+      <div class="loading-content">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando estacionamientos...</p>
+      </div>
+    } @else {
+      <!-- Step 1: Select Parking -->
+      <div class="form-section">
+        <h3 class="section-title">1. Selecciona un Estacionamiento</h3>
+        <mat-form-field class="full-width">
+          <mat-label>Estacionamiento</mat-label>
+          <mat-select
+            [compareWith]="compareParking"
+            (selectionChange)="onParkingSelected($event.value)"
+          >
+            @for (parking of parkings(); track parking.id) {
+              <mat-option [value]="parking">
+                <div class="parking-option">
+                  <span class="parking-name">{{ parking.parkingName }}</span>
+                  <span class="parking-location">{{ parking.address }}</span>
+                </div>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Selected Parking Info -->
+        @if (selectedParking()) {
+          <div class="parking-info-card">
+            <div class="parking-info-row">
+              <span class="label">Nombre:</span>
+              <span class="value">{{ selectedParking()!.parkingName }}</span>
+            </div>
+            <div class="parking-info-row">
+              <span class="label">Ubicación:</span>
+              <span class="value">{{ selectedParking()!.address }}</span>
+            </div>
+            <div class="parking-info-row">
+              <span class="label">Espacios Totales:</span>
+              <span class="value">{{ selectedParking()!.totalSpots }}</span>
+            </div>
+            <div class="parking-info-row">
+              <span class="label">Tarifa:</span>
+              <span class="value">${{ selectedParking()!.baseTariffPerHour }} por hora</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Step 2: Select Date -->
+      @if (selectedParking()) {
+        <div class="form-section">
+          <h3 class="section-title">2. Selecciona la Fecha de Reservación</h3>
+          <p class="section-hint">Solo puedes reservar para el día de hoy</p>
+          <mat-form-field class="full-width">
+            <mat-label>Fecha (Hoy)</mat-label>
+            <input
+              matInput
+              [matDatepicker]="picker"
+              [min]="minDate"
+              [max]="maxDate"
+              [value]="today | date:'medium'"
+              readonly
+              class="date-input"
+            />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <!-- Step 3: Select Hours and View Available Spots -->
+        @if (selectedDate()) {
+          <div class="form-section">
+            <h3 class="section-title">3. Selecciona la Duración</h3>
+            <p class="section-hint">Máximo 2 horas por reservación</p>
+            <mat-form-field class="full-width">
+              <mat-label>Horas</mat-label>
+              <mat-select [ngModel]="selectedHours()" (selectionChange)="selectedHours.set($event.value)">
+                <mat-option [value]="1">1 hora</mat-option>
+                <mat-option [value]="2">2 horas</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Available Spots Info -->
+          <div class="form-section">
+            <h3 class="section-title">4. Espacios Disponibles</h3>
+            @if (isLoadingSpots()) {
+              <div class="loading-spots">
+                <mat-spinner diameter="30"></mat-spinner>
+                <p>Cargando espacios disponibles...</p>
+              </div>
+            } @else if (availableSpots() !== null) {
+              <div class="available-spots-card" [class.available]="(availableSpots() ?? 0) > 0">
+                <mat-icon class="spots-icon">
+                  {{ (availableSpots() ?? 0) > 0 ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+                <div class="spots-info">
+                  <span class="spots-value">{{ availableSpots() }} espacios disponibles</span>
+                  <span class="spots-label">Para {{ selectedHours() }} hora(s)</span>
+                </div>
+              </div>
+
+              <!-- Important Notice -->
+              <div class="notice-card">
+                <mat-icon class="notice-icon">info</mat-icon>
+                <div class="notice-content">
+                  <h4>Importante</h4>
+                  <p>
+                    Debes llegar al estacionamiento
+                    <strong>15 minutos antes de tu horario</strong> para reclamar tu reserva.
+                  </p>
+                  <p class="warning">
+                    Si no llegas en el tiempo especificado, tu reserva será cancelada automáticamente.
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+  </mat-dialog-content>
+
+  <!-- Dialog Actions -->
+  <mat-dialog-actions class="dialog-actions">
+    <button
+      mat-stroked-button
+      (click)="cancel()"
+      [disabled]="isSubmitting()"
+    >
+      Cancelar
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="submit()"
+      [disabled]="!canSubmit() || isSubmitting()"
+    >
+      @if (isSubmitting()) {
+        <mat-spinner diameter="20"></mat-spinner>
+        Creando...
+      } @else {
+        Reservar
+      }
+    </button>
+  </mat-dialog-actions>
+</div>
+
+
+

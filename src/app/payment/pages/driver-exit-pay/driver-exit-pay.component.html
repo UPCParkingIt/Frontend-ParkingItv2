@@ -1,0 +1,71 @@
+<app-driver-toolbar />
+
+<div class="exit-pay-container">
+  <div class="exit-pay-content animate-fade-in-up">
+    <h1 class="pay-title">Confirmar Pago</h1>
+    <p class="pay-subtitle">Monto a pagar: <strong>S/ {{ amount | number:'1.2-2' }}</strong></p>
+
+    @if (hasFailed()) {
+      <mat-card class="payment-card error-card">
+        <div class="qr-section">
+          <mat-icon color="warn" class="qr-icon">error_outline</mat-icon>
+          <p class="qr-text" style="color: #f44336;">El pago fue rechazado</p>
+          <p class="qr-subtext">{{ failureReason() }}</p>
+          <button mat-flat-button color="warn" class="retry-btn" (click)="retryPayment()">
+            Intentar nuevamente
+          </button>
+        </div>
+      </mat-card>
+    } @else if (isAwaitingAdmin()) {
+      <mat-card class="payment-card waiting-card">
+        <div class="qr-section">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p class="qr-text" style="margin-top: 1rem;">Esperando confirmación...</p>
+          <p class="qr-subtext">El administrador está revisando su pago.</p>
+        </div>
+      </mat-card>
+    } @else {
+      @if (paymentMethod === 'YAPE') {
+        <!-- Yape QR -->
+        <mat-card class="payment-card">
+          <div class="qr-section">
+            <div class="qr-placeholder">
+              <mat-icon class="qr-icon">qr_code_2</mat-icon>
+              <p class="qr-text">Escanea para pagar con Yape</p>
+            </div>
+          </div>
+        </mat-card>
+      } @else {
+        <!-- CASH -->
+        <mat-card class="payment-card">
+          <div class="qr-section">
+            <div class="qr-placeholder">
+              <mat-icon class="qr-icon">payments</mat-icon>
+              <p class="qr-text">Pago en Efectivo</p>
+              <p class="qr-subtext">Por favor, entregue el efectivo al personal.</p>
+            </div>
+          </div>
+        </mat-card>
+      }
+
+      <div class="divider-row">
+        <div class="divider-line"></div>
+        <span class="divider-text">Una vez realizado el pago</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <button mat-flat-button color="primary" class="confirm-btn" (click)="onPaymentComplete()" id="btn-confirm-payment"
+        [disabled]="isConfirming()">
+        @if (isConfirming()) {
+          <mat-spinner diameter="22"></mat-spinner>
+        }
+        @if (!isConfirming()) {
+          <mat-icon>check_circle</mat-icon>
+        }
+        @if (!isConfirming()) {
+          <span>Confirmar Pago Realizado</span>
+        }
+      </button>
+    }
+  </div>
+</div>

@@ -1,0 +1,99 @@
+<div class="sign-up-container">
+  <div class="bg-decoration">
+    <div class="bg-circle bg-circle-1"></div>
+    <div class="bg-circle bg-circle-2"></div>
+  </div>
+
+  <div class="sign-up-content animate-fade-in-up">
+    <div class="brand-section">
+      <div class="logo-wrapper">
+        <mat-icon class="logo-icon">local_parking</mat-icon>
+      </div>
+      <h1 class="brand-title">Parking<span class="brand-accent">It</span></h1>
+      <p class="brand-subtitle">Crea tu cuenta</p>
+    </div>
+
+    <mat-card class="sign-up-card">
+      <mat-card-content>
+        <h2 class="card-title">Registro</h2>
+        <p class="card-description">Completa tus datos para crear una cuenta</p>
+
+        <form [formGroup]="signUpForm" (ngSubmit)="onSubmit()" class="sign-up-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="firstName" placeholder="Juan" id="sign-up-first-name" />
+              <mat-icon matPrefix>person</mat-icon>
+              @if (signUpForm.get('firstName')?.touched && signUpForm.get('firstName')?.invalid) {
+                <mat-error>{{ getFieldError('firstName') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Apellido</mat-label>
+              <input matInput formControlName="lastName" placeholder="Pérez" id="sign-up-last-name" />
+              <mat-icon matPrefix>person_outline</mat-icon>
+              @if (signUpForm.get('lastName')?.touched && signUpForm.get('lastName')?.invalid) {
+                <mat-error>{{ getFieldError('lastName') }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Correo electrónico</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="ejemplo@correo.com" id="sign-up-email" />
+            <mat-icon matPrefix>email</mat-icon>
+            @if (signUpForm.get('email')?.touched && signUpForm.get('email')?.invalid) {
+              <mat-error>{{ getFieldError('email') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password" [type]="hidePassword() ? 'password' : 'text'" placeholder="Mínimo 6 caracteres" id="sign-up-password" />
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+              <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (signUpForm.get('password')?.touched && signUpForm.get('password')?.invalid) {
+              <mat-error>{{ getFieldError('password') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="phoneNumber" placeholder="+51 999 888 777" id="sign-up-phone" />
+              <mat-icon matPrefix>phone</mat-icon>
+              @if (signUpForm.get('phoneNumber')?.touched && signUpForm.get('phoneNumber')?.invalid) {
+                <mat-error>{{ getFieldError('phoneNumber') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>DNI</mat-label>
+              <input matInput formControlName="dniNumber" placeholder="12345678" id="sign-up-dni" />
+              <mat-icon matPrefix>badge</mat-icon>
+              @if (signUpForm.get('dniNumber')?.touched && signUpForm.get('dniNumber')?.invalid) {
+                <mat-error>{{ getFieldError('dniNumber') }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <button mat-flat-button color="primary" type="submit" class="submit-btn" [disabled]="isLoading()" id="sign-up-submit">
+            @if (isLoading()) {
+              <mat-spinner diameter="22" class="btn-spinner"></mat-spinner>
+            } @else {
+              Crear Cuenta
+            }
+          </button>
+        </form>
+
+        <div class="sign-in-link">
+          <span>¿Ya tienes cuenta?</span>
+          <a routerLink="/sign-in" id="go-to-sign-in">Inicia sesión</a>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

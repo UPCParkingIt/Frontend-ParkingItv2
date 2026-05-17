@@ -1,0 +1,129 @@
+<app-driver-toolbar />
+
+<div class="exit-menu-container">
+  <div class="exit-menu-content animate-fade-in-up">
+    <h1 class="exit-title">Resumen de Estacionamiento</h1>
+    <p class="exit-subtitle">Detalles de su estadía</p>
+
+    @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando información de pago...</p>
+    </div>
+    } @else if (hasError()) {
+    <mat-card class="error-card">
+      <mat-icon color="warn">error_outline</mat-icon>
+      <p>No se pudo cargar la información del pago.</p>
+      <p class="error-hint">Por favor diríjase a la administración.</p>
+    </mat-card>
+    } @else if (isGuestFlow()) {
+    <mat-card class="summary-card">
+      <!-- Amount -->
+      <div class="plate-section">
+        <div class="plate-badge">
+          <mat-icon>directions_car</mat-icon>
+          <span class="plate-text">{{ guestLicensePlate() }}</span>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Details -->
+      <div class="details-section">
+        <div class="detail-row">
+          <div class="detail-label">
+            <mat-icon>person</mat-icon>
+            <span>Tipo de Usuario</span>
+          </div>
+          <span class="detail-value">Invitado (Guest)</span>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <mat-icon>payment</mat-icon>
+            <span>Método</span>
+          </div>
+          <span class="detail-value">YAPE (QR)</span>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-row total-row">
+          <div class="detail-label">
+            <mat-icon>receipt_long</mat-icon>
+            <span>Total a pagar</span>
+          </div>
+          <span class="detail-value total-value">{{ calculatedAmount() | currency:'PEN':'S/ ' }}</span>
+        </div>
+      </div>
+    </mat-card>
+
+    <div class="payment-methods-actions">
+      @if (isConfirming()) {
+        <mat-spinner diameter="30"></mat-spinner>
+      } @else {
+        <button mat-flat-button color="primary" class="pay-btn yape-btn" (click)="onProceedToPayment('YAPE')" id="btn-proceed-yape">
+          <mat-icon>qr_code_2</mat-icon>
+          Pagar con Yape
+        </button>
+        <button mat-flat-button class="pay-btn cash-btn" (click)="onProceedToPayment('CASH')" id="btn-proceed-cash">
+          <mat-icon>payments</mat-icon>
+          Pagar en Efectivo
+        </button>
+      }
+    </div>
+    } @else if (payment()) {
+    <mat-card class="summary-card">
+      <!-- Amount -->
+      <div class="plate-section">
+        <div class="plate-badge">
+          <mat-icon>receipt</mat-icon>
+          <span class="plate-text">S/ {{ payment()!.amount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Details -->
+      <div class="details-section">
+        <div class="detail-row">
+          <div class="detail-label">
+            <mat-icon>confirmation_number</mat-icon>
+            <span>Referencia</span>
+          </div>
+          <span class="detail-value">{{ payment()!.referenceNumber ?? '---' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <mat-icon>payment</mat-icon>
+            <span>Método</span>
+          </div>
+          <span class="detail-value">{{ payment()!.paymentMethod }}</span>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-row total-row">
+          <div class="detail-label">
+            <mat-icon>receipt_long</mat-icon>
+            <span>Total a pagar</span>
+          </div>
+          <span class="detail-value total-value">{{ payment()!.amount | currency:'PEN':'S/ ' }}</span>
+        </div>
+      </div>
+    </mat-card>
+
+    <div class="payment-methods-actions">
+      <button mat-flat-button color="primary" class="pay-btn yape-btn" (click)="onProceedToPayment('YAPE')" id="btn-proceed-yape-reg">
+        <mat-icon>qr_code_2</mat-icon>
+        Pagar con Yape
+      </button>
+      <button mat-flat-button class="pay-btn cash-btn" (click)="onProceedToPayment('CASH')" id="btn-proceed-cash-reg">
+        <mat-icon>payments</mat-icon>
+        Pagar en Efectivo
+      </button>
+    </div>
+    }
+  </div>
+</div>

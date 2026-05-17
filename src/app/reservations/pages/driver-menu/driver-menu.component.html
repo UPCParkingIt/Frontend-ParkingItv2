@@ -1,0 +1,86 @@
+<app-driver-toolbar />
+
+<div class="driver-menu-container">
+  <div class="driver-menu-content animate-fade-in-up">
+    <h1 class="menu-title">Ingreso al Estacionamiento</h1>
+    <p class="menu-subtitle">Seleccione su método de ingreso</p>
+
+    <!-- Access Code Option -->
+    <mat-card class="menu-card">
+      <div class="card-header">
+        <div class="card-icon-wrapper">
+          <mat-icon>qr_code</mat-icon>
+        </div>
+        <div>
+          <h2 class="card-title">Código de Reserva</h2>
+          <p class="card-description">Ingrese su código de acceso proporcionado</p>
+        </div>
+      </div>
+
+      <form [formGroup]="accessCodeForm" (ngSubmit)="onSubmitCode()" class="code-form">
+        <mat-form-field appearance="outline" class="code-field">
+          <mat-label>Código de acceso</mat-label>
+          <input matInput formControlName="accessCode" placeholder="ABCDE" maxlength="9"
+            style="text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; font-size: 18px;"
+            id="access-code-input" />
+          <mat-icon matPrefix>vpn_key</mat-icon>
+          @if (accessCodeForm.get('accessCode')?.touched && accessCodeForm.get('accessCode')?.invalid) {
+          <mat-error>Ingrese un código válido (8 caracteres)</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="submit" class="submit-btn" [disabled]="isLoading()"
+          id="submit-access-code">
+          @if (isLoading()) {
+          <mat-spinner diameter="22"></mat-spinner>
+          } @else {
+          Validar Código
+          }
+        </button>
+      </form>
+    </mat-card>
+
+    <!-- Divider -->
+    <div class="divider-row">
+      <div class="divider-line"></div>
+      <span class="divider-text">ó</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Manual Entry Option -->
+    <mat-card class="menu-card manual-card" (click)="!isLoading() && onManualEntry()" id="btn-manual-entry">
+      <div class="card-header clickable">
+        <div class="card-icon-wrapper manual-icon">
+          <mat-icon>directions_car</mat-icon>
+        </div>
+        <div>
+          <h2 class="card-title">Ingreso Manual</h2>
+          <p class="card-description">Continuar sin código de reserva</p>
+        </div>
+        <div>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </div>
+      </div>
+    </mat-card>
+
+    <div class="loading-overlay" *ngIf="isLoading()">
+      <mat-spinner diameter="60"></mat-spinner>
+      <h2 class="loading-text">Reconociendo vehículo...</h2>
+    </div>
+  </div>
+</div>
+
+<style>
+  .loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem 0;
+  }
+
+  .loading-text {
+    margin-top: 1rem;
+    color: #fff;
+  }
+</style>

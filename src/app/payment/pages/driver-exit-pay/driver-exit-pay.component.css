@@ -1,0 +1,385 @@
+.exit-pay-container {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-dark);
+  padding: 32px;
+}
+
+.exit-pay-content {
+  width: 100%;
+  max-width: 800px;
+  text-align: center;
+}
+
+.exit-pay-content > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pay-title {
+  font-size: 36px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  color: var(--color-text-primary);
+}
+
+.pay-subtitle {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.payment-card {
+  background: var(--color-bg-card) !important;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg) !important;
+  padding: 56px 48px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.error-card {
+  border-color: var(--color-error) !important;
+}
+
+.waiting-card {
+  border-color: var(--color-primary) !important;
+}
+
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 450px;
+  gap: 16px;
+  margin: auto;
+}
+
+.qr-placeholder {
+  width: 300px;
+  height: 300px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--color-surface);
+}
+
+.qr-icon {
+  font-size: 120px;
+  width: 120px;
+  height: 120px;
+  color: var(--color-primary);
+  opacity: 0.7;
+}
+
+.qr-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin: 0;
+}
+
+.qr-subtext {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  margin-top: 8px;
+  height: 48px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+.divider-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 28px auto;
+  width: 100%;
+  max-width: 480px;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.divider-text {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.wallets-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+  width: 100%;
+  max-width: 450px;
+}
+
+.wallet-btn {
+  height: 56px !important;
+  border-radius: var(--border-radius-md) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-normal);
+}
+
+.wallet-btn:hover {
+  border-color: var(--color-primary) !important;
+  background: var(--color-primary-subtle) !important;
+}
+
+.confirm-btn {
+  width: 100%;
+  max-width: 480px;
+  height: 68px !important;
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  border-radius: var(--border-radius-md) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(105, 231, 206, 0.25);
+  transition: all var(--transition-normal);
+}
+
+.confirm-btn:not([disabled]):hover {
+  box-shadow: 0 6px 32px rgba(105, 231, 206, 0.4) !important;
+}
+
+.action-arrow {
+  margin-top: 32px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all var(--transition-normal);
+}
+
+.action-arrow mat-icon {
+  color: var(--color-text-muted);
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.payment-card:hover .action-arrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===================================================================
+   TABLET LANDSCAPE — Lenovo Yoga Smart Tab 10.1" FHD
+   Viewport CSS en landscape: 1280×800 px
+   Área útil con toolbar 72px: 1280×728 px
+   =================================================================== */
+@media (min-width: 960px) and (max-width: 1366px) {
+
+  .exit-pay-container {
+    min-height: calc(100vh - 72px);
+    padding: 24px 40px;
+  }
+
+  .exit-pay-content {
+    max-width: 1000px;
+    /* Layout side-by-side: card izq, acción der */
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto 1fr;
+    column-gap: 40px;
+    align-items: start;
+    text-align: left;
+  }
+
+  .exit-pay-content > * {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .pay-title {
+    grid-column: 1 / -1;
+    font-size: 38px;
+    text-align: left;
+    margin-bottom: 4px;
+  }
+
+  .pay-subtitle {
+    grid-column: 1 / -1;
+    text-align: left;
+    margin-bottom: 24px;
+    font-size: 17px;
+  }
+
+  .payment-card {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 36px 40px;
+    min-height: 300px;
+  }
+
+  /* Contenedor botón confirmar en columna derecha */
+  .divider-row {
+    grid-column: 2;
+    grid-row: 3;
+    flex-direction: column;
+    margin: 0;
+    max-width: 320px;
+    align-self: center;
+    height: auto;
+  }
+
+  .divider-line {
+    width: 1px;
+    height: 32px;
+    flex: none;
+  }
+
+  .confirm-btn {
+    grid-column: 2;
+    max-width: 320px;
+    height: 76px !important;
+    font-size: 20px !important;
+    width: 320px;
+  }
+
+  .qr-placeholder {
+    width: 260px;
+    height: 260px;
+  }
+
+  .qr-icon {
+    font-size: 100px;
+    width: 100px;
+    height: 100px;
+  }
+
+  .qr-text {
+    font-size: 15px;
+  }
+
+  .qr-subtext {
+    font-size: 14px;
+  }
+}
+
+/* ===================================================================
+   TABLET PORTRAIT — uso secundario (800×1280 CSS px)
+   =================================================================== */
+@media (min-width: 600px) and (max-width: 959px) {
+
+  .exit-pay-container {
+    min-height: calc(100vh - 68px);
+    padding: 24px;
+    align-items: flex-start;
+    padding-top: 36px;
+  }
+
+  .exit-pay-content {
+    max-width: 680px;
+  }
+
+  .pay-title {
+    font-size: 30px;
+  }
+
+  .pay-subtitle {
+    font-size: 16px;
+    margin-bottom: 28px;
+  }
+
+  .payment-card {
+    padding: 36px 28px;
+    min-height: 320px;
+  }
+
+  .qr-placeholder {
+    width: 260px;
+    height: 260px;
+  }
+
+  .qr-icon {
+    font-size: 100px;
+    width: 100px;
+    height: 100px;
+  }
+
+  .confirm-btn {
+    max-width: 100%;
+    height: 64px !important;
+  }
+}
+
+/* ===================================================================
+   MOBILE — fallback
+   =================================================================== */
+@media (max-width: 599px) {
+
+  .exit-pay-container {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 24px;
+  }
+
+  .pay-title {
+    font-size: 26px;
+  }
+
+  .pay-subtitle {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+
+  .payment-card {
+    padding: 28px 16px;
+    min-height: 280px;
+  }
+
+  .qr-placeholder {
+    width: 220px;
+    height: 220px;
+  }
+
+  .qr-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+  }
+
+  .confirm-btn {
+    max-width: 100%;
+    height: 60px !important;
+    font-size: 16px !important;
+  }
+
+  .divider-row {
+    max-width: 100%;
+  }
+}

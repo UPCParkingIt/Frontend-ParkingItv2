@@ -1,0 +1,191 @@
+.sign-in-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  background: linear-gradient(145deg, #0A0A0A 0%, #0F1A18 50%, #0A0A0A 100%);
+}
+
+.bg-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+}
+
+.bg-circle-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--color-primary);
+  top: -150px;
+  right: -100px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.bg-circle-2 {
+  width: 350px;
+  height: 350px;
+  background: var(--color-primary-dark);
+  bottom: -80px;
+  left: -60px;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+.bg-circle-3 {
+  width: 200px;
+  height: 200px;
+  background: var(--color-primary);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 6s ease-in-out infinite;
+}
+
+.sign-in-content {
+  width: 100%;
+  max-width: 440px;
+  z-index: 1;
+}
+
+.brand-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(105, 231, 206, 0.25);
+}
+
+.logo-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  color: var(--color-black);
+}
+
+.brand-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.brand-accent {
+  color: var(--color-primary);
+}
+
+.brand-subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+.sign-in-card {
+  background: var(--color-bg-card) !important;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg) !important;
+  padding: 32px 28px !important;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.card-description {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 28px;
+}
+
+.sign-in-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.submit-btn {
+  margin-top: 8px;
+  width: 100%;
+  height: 50px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+.btn-spinner {
+  display: inline-block;
+}
+
+.sign-up-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.forgot-password-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.forgot-password-link a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.forgot-password-link a:hover {
+  color: var(--color-primary);
+}
+
+.sign-up-link a {
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-left: 6px;
+  transition: color var(--transition-fast);
+}
+
+.sign-up-link a:hover {
+  color: var(--color-primary-light);
+}
+
+@media (max-width: 480px) {
+  .sign-in-card {
+    padding: 24px 20px;
+  }
+
+  .brand-title {
+    font-size: 28px;
+  }
+}

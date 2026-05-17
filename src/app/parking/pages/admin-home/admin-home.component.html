@@ -1,0 +1,728 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <mat-icon>local_parking</mat-icon>
+        @if (!sidebarCollapsed()) { <span>Parking<span class="accent">It</span> Admin</span> }
+      </div>
+      <button mat-icon-button (click)="toggleSidebar()" id="sidebar-toggle-btn">
+        <mat-icon>{{ sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.id) {
+      <button class="nav-item" [class.active]="activeSection() === item.id" [id]="'nav-' + item.id"
+        (click)="navigateTo(item.id)" [matTooltip]="sidebarCollapsed() ? item.label : ''" matTooltipPosition="right">
+        <div class="nav-icon-wrap">
+          <mat-icon>{{ item.icon }}</mat-icon>
+          @if (item.badge && item.badge > 0) { <span class="nav-badge">{{ item.badge }}</span> }
+        </div>
+        @if (!sidebarCollapsed()) { <span class="nav-label">{{ item.label }}</span> }
+      </button>
+      }
+    </nav>
+    @if (!sidebarCollapsed()) {
+    <div class="sidebar-footer">
+      <mat-icon>account_circle</mat-icon>
+      <span class="user-email">{{ userEmail }}</span>
+    </div>
+    }
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    @if (isLoading()) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Cargando datos del estacionamiento...</p>
+    </div>
+    } @else {
+
+    <!-- DASHBOARD -->
+    @if (activeSection() === 'dashboard') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Panel de Control</h1>
+        <span class="section-sub">Resumen en tiempo real · {{ parking()?.parkingName }}</span>
+      </div>
+
+      @if (parking()) {
+      <div class="parking-banner">
+        <mat-icon>local_parking</mat-icon>
+        <div>
+          <p class="banner-name">{{ parking()!.parkingName }}</p>
+          <p class="banner-location"><mat-icon>location_on</mat-icon>{{ parking()!.address }}</p>
+        </div>
+        <div class="banner-status" [class.status-active]="parking()!.status === 'ACTIVE'">
+          {{ parking()!.status === 'ACTIVE' ? 'Activo' : parking()!.status }}
+        </div>
+      </div>
+      }
+
+      <div class="kpi-grid">
+        <mat-card class="kpi-card kpi-primary">
+          <div class="kpi-icon"><mat-icon>grid_view</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ parking()?.totalSpots ?? 0 }}</span>
+            <span class="kpi-label">Total Espacios</span>
+          </div>
+        </mat-card>
+        <mat-card class="kpi-card kpi-success">
+          <div class="kpi-icon"><mat-icon>check_circle</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ availableSpots }}</span>
+            <span class="kpi-label">Disponibles</span>
+          </div>
+        </mat-card>
+        <mat-card class="kpi-card kpi-warning">
+          <div class="kpi-icon"><mat-icon>directions_car</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ occupiedSpots }}</span>
+            <span class="kpi-label">Ocupados</span>
+          </div>
+        </mat-card>
+        <mat-card class="kpi-card kpi-danger">
+          <div class="kpi-icon"><mat-icon>warning</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ pendingAlertsCount }}</span>
+            <span class="kpi-label">Alertas Pendientes</span>
+          </div>
+        </mat-card>
+        <mat-card class="kpi-card kpi-info">
+          <div class="kpi-icon"><mat-icon>event</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ reservations().length }}</span>
+            <span class="kpi-label">Reservas Hoy</span>
+          </div>
+        </mat-card>
+        <mat-card class="kpi-card kpi-purple">
+          <div class="kpi-icon"><mat-icon>local_offer</mat-icon></div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ activePromotionsCount }}</span>
+            <span class="kpi-label">Promociones Activas</span>
+          </div>
+        </mat-card>
+      </div>
+
+      <div class="occupancy-bar-wrap">
+        <div class="occupancy-bar-header">
+          <span class="occ-label">Tasa de Ocupación</span>
+          <span class="occ-value">{{ occupancyRate }}%</span>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="occupancyRate" class="occ-bar"></mat-progress-bar>
+      </div>
+
+      @if (stats()) {
+      <div class="stats-row-grid">
+        <mat-card class="stat-detail-card">
+          <mat-icon>login</mat-icon>
+          <div><span class="sd-val">{{ stats()!.totalEntries }}</span><span class="sd-lbl">Entradas</span></div>
+        </mat-card>
+        <mat-card class="stat-detail-card">
+          <mat-icon>logout</mat-icon>
+          <div><span class="sd-val">{{ stats()!.totalExits }}</span><span class="sd-lbl">Salidas</span></div>
+        </mat-card>
+        <mat-card class="stat-detail-card">
+          <mat-icon>verified</mat-icon>
+          <div><span class="sd-val">{{ stats()!.matchedExits }}</span><span class="sd-lbl">Salidas OK</span></div>
+        </mat-card>
+        <mat-card class="stat-detail-card stat-danger">
+          <mat-icon>gpp_bad</mat-icon>
+          <div><span class="sd-val">{{ stats()!.failedExits }}</span><span class="sd-lbl">Salidas fallidas</span></div>
+        </mat-card>
+        <mat-card class="stat-detail-card">
+          <mat-icon>timer</mat-icon>
+          <div><span class="sd-val">{{ stats()!.averageOccupancyMinutes | number:'1.0-0' }}m</span><span
+              class="sd-lbl">Duración prom.</span></div>
+        </mat-card>
+        <mat-card class="stat-detail-card">
+          <mat-icon>percent</mat-icon>
+          <div><span class="sd-val">{{ stats()!.occupancyRate | number:'1.1-1' }}%</span><span class="sd-lbl">Tasa
+              histórica</span></div>
+        </mat-card>
+      </div>
+      }
+
+      <div class="quick-actions">
+        <h2 class="subsection-title">Acciones Rápidas</h2>
+        <div class="quick-actions-grid">
+          @for (item of navItems.slice(1); track item.id) {
+          <button class="quick-action-btn" (click)="navigateTo(item.id)" [id]="'quick-' + item.id">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.label }}</span>
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- PARKING INFO -->
+    @if (activeSection() === 'parking-info') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Mi Estacionamiento</h1>
+        <span class="section-sub">Edita la información de tu estacionamiento</span>
+      </div>
+      @if (parking()) {
+      <div class="info-chips">
+        <span class="info-chip"><mat-icon>tag</mat-icon>ID: {{ parking()!.id.slice(0,8) }}...</span>
+        <span class="info-chip chip-success"><mat-icon>check_circle</mat-icon>{{ parking()!.status }}</span>
+        <span class="info-chip"><mat-icon>payments</mat-icon>S/ {{ parking()!.baseTariffPerHour }}/hr</span>
+        <span class="info-chip"><mat-icon>schedule</mat-icon>{{ parking()!.openTime }} – {{ parking()!.closeTime
+          }}</span>
+      </div>
+      }
+      <mat-card class="form-card">
+        <h2 class="card-title"><mat-icon>edit</mat-icon>Editar Información</h2>
+        <form [formGroup]="parkingForm" (ngSubmit)="saveParkingInfo()" class="admin-form">
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>Nombre del Estacionamiento</mat-label>
+            <input matInput formControlName="parkingName" id="parking-name-input" />
+            <mat-icon matPrefix>badge</mat-icon>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>Dirección</mat-label>
+            <input matInput formControlName="address" id="parking-address-input" />
+            <mat-icon matPrefix>location_on</mat-icon>
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-flat-button color="primary" type="submit" id="save-parking-btn"
+              [disabled]="parkingForm.invalid || isSaving()">
+              <mat-icon>save</mat-icon><span>Guardar Cambios</span>
+            </button>
+          </div>
+        </form>
+      </mat-card>
+    </div>
+    }
+
+    <!-- TARIFFS -->
+    @if (activeSection() === 'tariffs') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Configurar Tarifas</h1>
+        <span class="section-sub">Ajusta la tarifa por hora y la tarifa de reservación</span>
+      </div>
+      <div class="tariff-display-row">
+        <mat-card class="tariff-current-card">
+          <mat-icon class="tariff-icon">payments</mat-icon>
+          <div>
+            <p class="tariff-current-value">S/ {{ parking()?.baseTariffPerHour | number:'1.2-2' }}</p>
+            <p class="tariff-current-label">Tarifa actual por hora</p>
+          </div>
+        </mat-card>
+        <mat-card class="tariff-current-card">
+          <mat-icon class="tariff-icon">confirmation_number</mat-icon>
+          <div>
+            <p class="tariff-current-value">S/ {{ parking()?.reservationFee | number:'1.2-2' }}</p>
+            <p class="tariff-current-label">Tarifa de reservación</p>
+          </div>
+        </mat-card>
+      </div>
+      <mat-card class="form-card">
+        <h2 class="card-title"><mat-icon>edit</mat-icon>Actualizar Tarifas</h2>
+        <form [formGroup]="tariffForm" (ngSubmit)="saveTariff()" class="admin-form">
+          <mat-form-field appearance="outline" class="field-half">
+            <mat-label>Tarifa por Hora (S/)</mat-label>
+            <input matInput type="number" step="0.5" min="0" formControlName="baseTariffPerHour" id="tariff-input" />
+            <mat-icon matPrefix>payments</mat-icon>
+            <mat-hint>Costo por hora de estancia</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="field-half">
+            <mat-label>Tarifa de Reservación (S/)</mat-label>
+            <input matInput type="number" step="0.5" min="0" formControlName="reservationFee" id="reservation-fee-input" />
+            <mat-icon matPrefix>confirmation_number</mat-icon>
+            <mat-hint>Cargo fijo al momento de reservar</mat-hint>
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-flat-button color="primary" type="submit" id="save-tariff-btn"
+              [disabled]="tariffForm.invalid || isSaving()">
+              <mat-icon>save</mat-icon><span>Aplicar Tarifas</span>
+            </button>
+          </div>
+        </form>
+      </mat-card>
+    </div>
+    }
+
+    <!-- SPACES -->
+    @if (activeSection() === 'spaces') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Espacios en Tiempo Real</h1>
+        <span class="section-sub">Datos de ocupación del backend</span>
+      </div>
+      <div class="spaces-summary-row">
+        <div class="space-summary-item available">
+          <span class="ss-val">{{ availableSpots }}</span>
+          <span class="ss-lbl">Disponibles</span>
+        </div>
+        <div class="space-summary-item occupied">
+          <span class="ss-val">{{ occupiedSpots }}</span>
+          <span class="ss-lbl">Ocupados</span>
+        </div>
+        <div class="space-summary-item total">
+          <span class="ss-val">{{ parking()?.totalSpots ?? 0 }}</span>
+          <span class="ss-lbl">Total</span>
+        </div>
+        <div class="space-summary-item rate">
+          <span class="ss-val">{{ occupancyRate }}%</span>
+          <span class="ss-lbl">Ocupación</span>
+        </div>
+      </div>
+      <mat-progress-bar mode="determinate" [value]="occupancyRate" class="occ-bar spaces-bar"></mat-progress-bar>
+
+      @if (stats()) {
+      <div class="spaces-stats-grid">
+        <mat-card class="ssg-card">
+          <mat-icon>login</mat-icon>
+          <div><b>{{ stats()!.totalEntries }}</b><small>Entradas totales</small></div>
+        </mat-card>
+        <mat-card class="ssg-card">
+          <mat-icon>logout</mat-icon>
+          <div><b>{{ stats()!.totalExits }}</b><small>Salidas totales</small></div>
+        </mat-card>
+        <mat-card class="ssg-card ssg-danger">
+          <mat-icon>gpp_bad</mat-icon>
+          <div><b>{{ stats()!.failedExits }}</b><small>Salidas no verificadas</small></div>
+        </mat-card>
+        <mat-card class="ssg-card">
+          <mat-icon>timer</mat-icon>
+          <div><b>{{ stats()!.averageOccupancyMinutes | number:'1.0-0' }} min</b><small>Duración promedio</small></div>
+        </mat-card>
+      </div>
+      }
+
+      <div class="spaces-visual">
+        @for (i of spacesArray(); track i) {
+        <div class="space-cell" [class.space-occupied]="i <= occupiedSpots" [class.space-free]="i > occupiedSpots">
+          <mat-icon>{{ i <= occupiedSpots ? 'directions_car' : 'check_circle_outline' }}</mat-icon>
+              <span>{{ i }}</span>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- UNAUTHORIZED EXITS / ALERTS -->
+    @if (activeSection() === 'unauthorized-exits') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Alertas de Seguridad</h1>
+        <span class="section-sub">{{ pendingAlertsCount }} alerta(s) general(es) pendiente(s) · {{ facialAlerts().length }} mismatch(es) facial(es)</span>
+      </div>
+
+      <!-- Sub-sección: Alertas Generales del Sistema -->
+      <h2 class="alerts-subsection-title">
+        <mat-icon>warning_amber</mat-icon> Alertas del Sistema
+      </h2>
+      @if (alerts().length === 0) {
+      <div class="empty-state-inline">
+        <mat-icon>shield</mat-icon>
+        <p>Sin alertas generales registradas</p>
+      </div>
+      } @else {
+      <div class="alerts-list">
+        @for (alert of alerts(); track alert.id) {
+        <mat-card class="alert-card"
+          [class.alert-resolved]="alert.status === 'RESOLVED' || alert.status === 'FALSE_ALARM'">
+          <div class="alert-left">
+            <div class="severity-dot" [class]="'sev-' + alert.severity.toLowerCase()"></div>
+            <div>
+              <p class="alert-plate">{{ alert.alertType }}</p>
+              <p class="alert-detail">{{ alert.description }} · {{ alert.createdAt | date:'short' }}</p>
+            </div>
+          </div>
+          <div class="alert-right">
+            <span class="severity-badge" [class]="'sev-badge-' + alert.severity.toLowerCase()">{{
+              severityLabel(alert.severity) }}</span>
+            <span class="alert-status-chip">{{ alertStatusLabel(alert.status) }}</span>
+            @if (alert.status === 'PENDING') {
+            <button mat-flat-button color="primary" (click)="resolveAlert(alert.id)"
+              [id]="'resolve-' + alert.id">Resolver</button>
+            <button mat-stroked-button (click)="markFalseAlarm(alert.id)" [id]="'false-' + alert.id">Falsa
+              Alarma</button>
+            }
+          </div>
+        </mat-card>
+        }
+      </div>
+      }
+
+      <!-- Sub-sección: Alertas de Verificación Facial (Mismatch) -->
+      <h2 class="alerts-subsection-title" style="margin-top: 40px;">
+        <mat-icon>face_retouching_off</mat-icon> Alertas de Verificación Facial
+      </h2>
+      @if (facialAlerts().length === 0) {
+      <div class="empty-state-inline">
+        <mat-icon>verified_user</mat-icon>
+        <p>No hay alertas faciales. El sistema de verificación opera con normalidad.</p>
+      </div>
+      } @else {
+      <div class="alerts-list">
+        @for (alert of facialAlerts(); track alert.id) {
+        <mat-card class="alert-card alert-card-mismatch">
+          <div class="alert-header">
+            <div class="alert-icon-wrap alert-icon-danger">
+              <mat-icon>face_retouching_off</mat-icon>
+            </div>
+            <div class="alert-meta">
+              <p class="alert-title">⚠️ Mismatch Facial Detectado en Salida</p>
+              <p class="alert-subtitle">Placa: <strong>{{ alert.licensePlate }}</strong></p>
+            </div>
+            <span class="alert-badge alert-badge-mismatch">MISMATCH</span>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="alert-body">
+            <div class="alert-detail-row">
+              <mat-icon>info_outline</mat-icon>
+              <span>{{ alert.alertReason || 'Rostro de salida no coincide con el de entrada' }}</span>
+            </div>
+            <div class="alert-detail-row">
+              <mat-icon>access_time</mat-icon>
+              <span>{{ alert.alertTimestamp | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+            </div>
+          </div>
+        </mat-card>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- PENDING PAYMENTS -->
+    @if (activeSection() === 'pending-payments') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Aprobación de Pagos</h1>
+        <span class="section-sub">{{ pendingPayments().length }} pago(s) pendiente(s) de revisión</span>
+      </div>
+
+      @if (pendingPayments().length === 0) {
+      <div class="empty-state">
+        <mat-icon>price_check</mat-icon>
+        <p>No hay pagos pendientes de aprobación en este momento.</p>
+      </div>
+      } @else {
+      <div class="alerts-list">
+        @for (payment of pendingPayments(); track payment.id) {
+        <mat-card class="alert-card">
+          <div class="alert-left">
+            <div class="severity-dot sev-high"></div>
+            <div>
+              <p class="alert-plate">Pago {{ payment.paymentMethod }} - S/ {{ payment.amount | number:'1.2-2' }}</p>
+              <p class="alert-detail">Ref: {{ payment.referenceNumber }} · Creado: {{ payment.initiatedAt | date:'shortTime' }}</p>
+            </div>
+          </div>
+          <div class="alert-right" style="gap: 12px; display: flex; align-items: center;">
+            <button mat-flat-button color="primary" (click)="approvePayment(payment.id)">
+              <mat-icon>check</mat-icon> Aprobar
+            </button>
+            <button mat-flat-button color="warn" (click)="rejectPayment(payment.id)">
+              <mat-icon>close</mat-icon> Rechazar
+            </button>
+          </div>
+        </mat-card>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- ACCESS LOGS -->
+    @if (activeSection() === 'access-logs') {
+    <div class="content-section">
+      <div class="section-header">
+        <h2><mat-icon>history</mat-icon> Historial de Accesos</h2>
+        <p>Registro completo de entradas y salidas de vehículos</p>
+      </div>
+
+      @if (accessLogs().length === 0) {
+      <div class="empty-state">
+        <mat-icon>history_toggle_off</mat-icon>
+        <p>Aún no hay registros de acceso para este estacionamiento.</p>
+      </div>
+      } @else {
+      <div class="logs-table-container mat-elevation-z2">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Placa</th>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Tiempo</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of accessLogs(); track log.id) {
+            <tr>
+              <td class="plate-col"><strong>{{ log.licensePlate }}</strong></td>
+              <td>{{ log.entryTimestamp | date:'dd/MM/yy HH:mm:ss' }}</td>
+              <td>
+                @if (log.exitTimestamp) {
+                  {{ log.exitTimestamp | date:'dd/MM/yy HH:mm:ss' }}
+                } @else {
+                  <span class="text-muted">En parking</span>
+                }
+              </td>
+              <td>
+                @if (log.occupancyDurationMinutes !== null) {
+                  {{ log.occupancyDurationMinutes }} min
+                } @else {
+                  -
+                }
+              </td>
+              <td>
+                @if (log.status === 'ENTRY') {
+                  <span class="log-badge log-badge-entry">Ingresó</span>
+                } @else if (log.status === 'MATCHED') {
+                  <span class="log-badge log-badge-matched">Salida OK</span>
+                } @else if (log.status === 'MISMATCH') {
+                  <span class="log-badge log-badge-mismatch" [title]="log.alertReason">⚠️ Mismatch</span>
+                } @else {
+                  <span class="log-badge log-badge-default">{{ log.status }}</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+    }
+
+
+    <!-- REPORTS -->
+    @if (activeSection() === 'reports') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Reportes de Ocupación</h1>
+        <span class="section-sub">Estadísticas reales del estacionamiento</span>
+      </div>
+      @if (stats()) {
+      <div class="reports-kpi-grid">
+        <mat-card class="rep-kpi-card">
+          <div class="rep-kpi-icon"><mat-icon>login</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.totalEntries }}</span><span
+              class="rep-kpi-lbl">Total Entradas</span></div>
+        </mat-card>
+        <mat-card class="rep-kpi-card">
+          <div class="rep-kpi-icon"><mat-icon>logout</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.totalExits }}</span><span
+              class="rep-kpi-lbl">Total Salidas</span></div>
+        </mat-card>
+        <mat-card class="rep-kpi-card rep-success">
+          <div class="rep-kpi-icon"><mat-icon>verified</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.matchedExits }}</span><span
+              class="rep-kpi-lbl">Salidas Verificadas</span></div>
+        </mat-card>
+        <mat-card class="rep-kpi-card rep-danger">
+          <div class="rep-kpi-icon"><mat-icon>gpp_bad</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.failedExits }}</span><span
+              class="rep-kpi-lbl">Sin Verificar</span></div>
+        </mat-card>
+        <mat-card class="rep-kpi-card rep-warning">
+          <div class="rep-kpi-icon"><mat-icon>warning</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.alerts }}</span><span
+              class="rep-kpi-lbl">Alertas Generadas</span></div>
+        </mat-card>
+        <mat-card class="rep-kpi-card">
+          <div class="rep-kpi-icon"><mat-icon>timer</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.averageOccupancyMinutes | number:'1.0-0'
+              }}m</span><span class="rep-kpi-lbl">Duración Promedio</span></div>
+        </mat-card>
+        <mat-card class="rep-kpi-card rep-success">
+          <div class="rep-kpi-icon"><mat-icon>percent</mat-icon></div>
+          <div class="rep-kpi-body"><span class="rep-kpi-val">{{ stats()!.occupancyRate | number:'1.1-1' }}%</span><span
+              class="rep-kpi-lbl">Tasa de Ocupación</span></div>
+        </mat-card>
+      </div>
+      } @else {
+      <div class="empty-state"><mat-icon>bar_chart</mat-icon>
+        <p>Cargando estadísticas...</p>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- PROMOTIONS -->
+    @if (activeSection() === 'promotions') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Gestionar Promociones</h1>
+        <span class="section-sub">{{ activePromotionsCount }} promoción(es) activa(s)</span>
+      </div>
+      <mat-card class="form-card">
+        <h2 class="card-title"><mat-icon>add_circle</mat-icon>Nueva Promoción</h2>
+        <form [formGroup]="promotionForm" (ngSubmit)="addPromotion()" class="admin-form">
+          <div class="form-row form-row-2col">
+            <mat-form-field appearance="outline">
+              <mat-label>Título</mat-label>
+              <input matInput formControlName="title" id="promo-title-input" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Descuento (%)</mat-label>
+              <input matInput type="number" formControlName="discountPercent" id="promo-discount-input" />
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline" class="field-full">
+            <mat-label>Descripción</mat-label>
+            <input matInput formControlName="description" id="promo-desc-input" />
+          </mat-form-field>
+          <div class="form-row form-row-2col">
+            <mat-form-field appearance="outline">
+              <mat-label>Válido desde</mat-label>
+              <input matInput type="date" formControlName="validFrom" id="promo-from-input" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Válido hasta</mat-label>
+              <input matInput type="date" formControlName="validTo" id="promo-to-input" />
+            </mat-form-field>
+          </div>
+          <div class="form-actions">
+            <button mat-flat-button color="primary" type="submit" id="add-promo-btn" [disabled]="promotionForm.invalid">
+              <mat-icon>add</mat-icon>Agregar Promoción
+            </button>
+          </div>
+        </form>
+      </mat-card>
+
+      <div class="promo-list">
+        @if (promotions().length === 0) {
+        <div class="empty-state"><mat-icon>local_offer</mat-icon>
+          <p>Sin promociones creadas</p>
+        </div>
+        }
+        @for (promo of promotions(); track promo.id) {
+        <mat-card class="promo-card" [class.promo-inactive]="!promo.isActive">
+          <div class="promo-left">
+            <mat-icon class="promo-icon" [class.promo-icon-active]="promo.isActive">local_offer</mat-icon>
+            <div>
+              <p class="promo-name">{{ promo.title }}</p>
+              <p class="promo-dates">{{ promo.validFrom }} → {{ promo.validTo }}</p>
+              @if (promo.description) { <p class="promo-desc-text">{{ promo.description }}</p> }
+            </div>
+          </div>
+          <div class="promo-right">
+            <span class="promo-discount">{{ promo.discountPercent }}% OFF</span>
+            <!-- Toggle activar / desactivar -->
+            <mat-slide-toggle
+              color="primary"
+              [checked]="promo.isActive"
+              (change)="togglePromotion(promo)"
+              [id]="'promo-toggle-' + promo.id"
+              [matTooltip]="promo.isActive ? 'Desactivar promoción' : 'Activar promoción'">
+            </mat-slide-toggle>
+            <span class="promo-status-badge" [class.promo-active-badge]="promo.isActive">
+              {{ promo.isActive ? 'Activa' : 'Inactiva' }}
+            </span>
+            <button mat-icon-button color="warn" (click)="removePromotion(promo.id)"
+              [id]="'promo-delete-' + promo.id" matTooltip="Eliminar promoción">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </mat-card>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- RESERVAS DEL PARKING -->
+    @if (activeSection() === 'incidents') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Reservas del Estacionamiento</h1>
+        <span class="section-sub">{{ reservations().length }} reserva(s) registrada(s)</span>
+      </div>
+      @if (reservations().length === 0) {
+      <div class="empty-state"><mat-icon>event</mat-icon>
+        <p>Sin reservas registradas</p>
+      </div>
+      } @else {
+      <div class="reservations-table">
+        <div class="res-table-header">
+          <span>Código</span><span>Usuario</span><span>Desde</span><span>Tarifa</span><span>Estado</span>
+        </div>
+        @for (r of reservations(); track r.id) {
+        <div class="res-table-row">
+          <span class="res-code">{{ r.accessCode }}</span>
+          <span class="res-user">{{ r.userId.slice(0,8) }}...</span>
+          <span>{{ r.reservedFromTime | date:'short' }}</span>
+          <span>S/ {{ r.reservationFee }}</span>
+          <span class="res-status" [class]="'res-status-' + r.status.toLowerCase()">{{ reservationStatusLabel(r.status)
+            }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- SCHEDULES -->
+    @if (activeSection() === 'schedules') {
+    <div class="section-content animate-fade-in-up">
+      <div class="section-title-bar">
+        <h1 class="section-heading">Horarios de Operación</h1>
+        <span class="section-sub">
+          El estacionamiento opera con un único horario para todos los días habilitados
+        </span>
+      </div>
+
+      <!-- Horario global (openTime / closeTime) -->
+      <mat-card class="form-card">
+        <h2 class="card-title"><mat-icon>schedule</mat-icon>Horario de Apertura y Cierre</h2>
+        <form [formGroup]="scheduleForm" class="admin-form">
+          <div class="form-row form-row-2col">
+            <mat-form-field appearance="outline">
+              <mat-label>Hora de apertura</mat-label>
+              <input matInput type="time" formControlName="openTime" id="global-open-input" />
+              <mat-icon matPrefix>login</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Hora de cierre</mat-label>
+              <input matInput type="time" formControlName="closeTime" id="global-close-input" />
+              <mat-icon matPrefix>logout</mat-icon>
+            </mat-form-field>
+          </div>
+        </form>
+      </mat-card>
+
+      <!-- Días habilitados -->
+      <mat-card class="form-card">
+        <h2 class="card-title"><mat-icon>calendar_today</mat-icon>Días de Operación</h2>
+        <div class="schedules-list">
+          @for (day of schedules(); track day.index) {
+          <div class="schedule-row" [class.schedule-disabled]="!day.enabled">
+            <mat-slide-toggle [checked]="day.enabled" (change)="toggleScheduleDay(day.index)"
+              [id]="'schedule-toggle-' + day.index" color="primary">
+            </mat-slide-toggle>
+            <span class="schedule-day">{{ day.day }}</span>
+            <span class="schedule-status-chip" [class.chip-active]="day.enabled">
+              {{ day.enabled ? 'Habilitado' : 'Cerrado' }}
+            </span>
+            @if (day.enabled) {
+            <span class="schedule-hours-preview">
+              <mat-icon>access_time</mat-icon>
+              {{ scheduleForm.value.openTime }} – {{ scheduleForm.value.closeTime }}
+            </span>
+            }
+          </div>
+          }
+        </div>
+        <div class="form-actions">
+          <button mat-flat-button color="primary" (click)="saveSchedules()"
+            id="save-schedules-btn" [disabled]="isSaving() || scheduleForm.invalid">
+            <mat-icon>save</mat-icon><span>Guardar Horarios</span>
+          </button>
+        </div>
+      </mat-card>
+    </div>
+    }
+
+    }
+  </main>
+</div>

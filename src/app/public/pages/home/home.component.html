@@ -1,0 +1,321 @@
+<app-toolbar />
+
+<div class="home-container">
+  <div class="home-content animate-fade-in-up">
+
+    <!-- Welcome -->
+    <section class="welcome-section">
+      <h1 class="welcome-title">Bienvenido a Parking<span class="accent">It</span></h1>
+      <p class="welcome-subtitle">Reserva tu espacio y gestiona tus estacionamientos</p>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-row">
+      <mat-card class="stat-card">
+        <div class="stat-icon-wrapper"><mat-icon>event</mat-icon></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ reservations().length }}</span>
+          <span class="stat-label">Reservaciones</span>
+        </div>
+      </mat-card>
+      <mat-card class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-active"><mat-icon>local_parking</mat-icon></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ parkingLots().length }}</span>
+          <span class="stat-label">Estacionamientos</span>
+        </div>
+      </mat-card>
+    </section>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button mat-flat-button color="primary" id="open-wizard-btn" (click)="openWizard()">
+        <mat-icon>add_circle</mat-icon> Nueva Reservación
+      </button>
+      <button mat-stroked-button id="open-companion-btn" class="companion-btn" (click)="openCompanion()">
+        <mat-icon>person_add</mat-icon> Registrar Acompañante
+      </button>
+    </div>
+
+    <!-- ===== RESERVATION WIZARD ===== -->
+    @if (showWizard()) {
+    <div class="panel-overlay animate-fade-in-up">
+
+      <!-- Step 1 — Select parking lot -->
+      @if (wizardStep() === 1) {
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2><mat-icon>local_parking</mat-icon> Selecciona un Estacionamiento</h2>
+          <button mat-icon-button (click)="closeWizard()" id="close-wizard-btn"><mat-icon>close</mat-icon></button>
+        </div>
+        <p class="panel-hint">Elige el estacionamiento donde deseas reservar tu espacio.</p>
+        @if (parkingLots().length === 0) {
+        <div class="panel-empty"><mat-icon>search_off</mat-icon><span>No hay estacionamientos disponibles</span></div>
+        } @else {
+        <div class="parking-grid">
+          @for (lot of parkingLots(); track lot.id) {
+          <button class="parking-lot-card" (click)="selectParking(lot)" [id]="'lot-' + lot.id">
+            <div class="lot-icon"><mat-icon>local_parking</mat-icon></div>
+            <div class="lot-info">
+              <p class="lot-name">{{ lot.parkingName }}</p>
+              <p class="lot-location"><mat-icon>location_on</mat-icon>{{ lot.address }}</p>
+              <div class="lot-stats">
+                <span class="lot-spots"><mat-icon>grid_view</mat-icon>{{ lot.totalSpots }} espacios</span>
+                <span class="lot-tariff"><mat-icon>payments</mat-icon>S/ {{ lot.baseTariffPerHour }}/hr</span>
+              </div>
+            </div>
+            <mat-icon class="lot-arrow">chevron_right</mat-icon>
+          </button>
+          }
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Step 2 — Pick time and hours -->
+      @if (wizardStep() === 2) {
+      <div class="panel-card">
+        <div class="panel-header">
+          <button mat-icon-button (click)="wizardStep.set(1)"
+            id="back-step1-btn"><mat-icon>arrow_back</mat-icon></button>
+          <h2><mat-icon>schedule</mat-icon> Configura tu Reservación</h2>
+          <button mat-icon-button (click)="closeWizard()"
+            id="close-wizard-step2-btn"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <div class="selected-parking-banner">
+          <mat-icon>local_parking</mat-icon>
+          <div>
+            <p class="sp-name">{{ selectedParking()?.parkingName }}</p>
+            <p class="sp-loc">{{ selectedParking()?.address }}</p>
+          </div>
+        </div>
+
+        <form [formGroup]="timeForm" (ngSubmit)="submitReservation()" class="time-form">
+
+          <!-- Fecha -->
+          <div class="form-group">
+            <label class="form-label">Fecha</label>
+            <div class="date-display">
+              <mat-icon>calendar_today</mat-icon>
+              <span>{{ todayFormatted }}</span>
+              <span class="date-badge">Hoy</span>
+            </div>
+          </div>
+
+          <!-- Tarifas — visibles desde el inicio -->
+          <div class="cost-preview">
+            <span>Tarifa de reservación:</span>
+            <span class="cost-value">S/ {{ reservationFeeDisplay }}</span>
+          </div>
+          <p class="cost-note">
+            Se cobra S/ {{ reservationFeeDisplay }} al reservar.
+            El costo por hora de estancia es S/ {{ tariffPerHourDisplay }}/hr.
+          </p>
+
+          <!-- Aviso de llegada -->
+          <div class="arrival-warning">
+            <span class="warn-icon material-icons">notifications_active</span>
+            <div>
+              <p class="warning-title">Llega 15 minutos antes</p>
+              <p class="warning-text">Debes llegar al estacionamiento 15 minutos antes de tu hora reservada para reclamar tu espacio. Si no llegas a tiempo, tu reserva se cancelará automáticamente.</p>
+            </div>
+          </div>
+
+          <!-- Hora de llegada -->
+          <div class="form-group">
+            <label class="form-label" for="start-time-input">Hora de llegada</label>
+            <div class="time-input-wrap">
+              <span class="time-icon material-icons">schedule</span>
+              <input type="time" id="start-time-input" formControlName="startTime" [min]="minTime" class="time-input" />
+            </div>
+            @if (timeForm.get('startTime')?.invalid && timeForm.get('startTime')?.touched) {
+              <p class="field-error">Selecciona una hora válida (al menos 15 min desde ahora)</p>
+            }
+          </div>
+
+          <!-- Botón — desactivado hasta que se ingrese hora válida -->
+          <button mat-flat-button color="primary" type="submit" id="confirm-reservation-btn"
+            [disabled]="timeForm.invalid || isSubmitting()" class="submit-btn">
+            {{ isSubmitting() ? 'Reservando...' : 'Confirmar Reservación' }}
+          </button>
+        </form>
+      </div>
+      }
+
+      <!-- Step 3 — Success -->
+      @if (wizardStep() === 3) {
+      <div class="panel-card success-panel">
+        <div class="success-icon"><mat-icon>check_circle</mat-icon></div>
+        <h2 class="success-title">¡Reservación Confirmada!</h2>
+        <p class="success-sub">Tu espacio ha sido reservado exitosamente</p>
+
+        @if (newReservation()) {
+        <div class="access-code-display">
+          <p class="access-label">Código de Acceso</p>
+          <p class="access-code">{{ newReservation()!.accessCode }}</p>
+          <p class="access-hint">Muestra este código al llegar al estacionamiento</p>
+        </div>
+        <div class="arrival-info">
+          <mat-icon>alarm</mat-icon>
+          <p class="arrival-info-text">Llega antes de las <strong>{{ getArrivalTime(newReservation()!.reservedFromTime)
+              }}</strong></p>
+        </div>
+        }
+
+        <button mat-flat-button color="primary" (click)="closeWizard()" id="close-success-btn" class="submit-btn">
+          <mat-icon>home</mat-icon> Volver al Inicio
+        </button>
+      </div>
+      }
+
+    </div>
+    }
+
+    <!-- ===== COMPANION PANEL ===== -->
+    @if (showCompanion()) {
+    <div class="panel-overlay animate-fade-in-up">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2><mat-icon>person_add</mat-icon> Registrar Acompañante</h2>
+          <button mat-icon-button (click)="closeCompanion()"
+            id="close-companion-btn"><mat-icon>close</mat-icon></button>
+        </div>
+        <p class="panel-hint">Registra la foto de tu acompañante para que pueda ingresar al estacionamiento contigo.</p>
+
+        <!-- Photo requirements notice -->
+        <div class="photo-requirements-notice">
+          <mat-icon>info</mat-icon>
+          <div>
+            <p class="notice-title">Requisitos de la foto</p>
+            <ul class="notice-list">
+              <li>El rostro debe estar <strong>centrado y enfocado</strong> correctamente</li>
+              <li>Formato requerido: <strong>.jpg</strong></li>
+              <li>Buena iluminación, sin objetos cubriendo el rostro</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Source selector -->
+        @if (!companionPreview() && !showCamera()) {
+        <div class="photo-source-selector">
+          <button class="source-btn" id="select-gallery-btn" (click)="galleryInput.click()">
+            <mat-icon>photo_library</mat-icon>
+            <span>Seleccionar desde galería</span>
+            <small>JPG, PNG, etc.</small>
+          </button>
+          <button class="source-btn" id="open-camera-btn" (click)="openCamera()">
+            <mat-icon>camera_alt</mat-icon>
+            <span>Usar cámara</span>
+            <small>Foto en tiempo real</small>
+          </button>
+        </div>
+        <input #galleryInput type="file" accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg" class="file-input-hidden"
+          id="companion-gallery-input" (change)="onPhotoSelected($event)" />
+        }
+
+        <!-- Camera stream -->
+        @if (showCamera()) {
+        <div class="camera-container">
+          <video id="camera-video" class="camera-video" autoplay playsinline muted></video>
+          <div class="camera-actions">
+            <button mat-stroked-button (click)="stopCamera()" id="cancel-camera-btn">
+              <mat-icon>close</mat-icon> Cancelar
+            </button>
+            <button mat-flat-button color="primary" (click)="capturePhoto()" id="capture-photo-btn">
+              <mat-icon>camera</mat-icon> Capturar foto
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- Preview -->
+        @if (companionPreview()) {
+        <div class="photo-preview-wrap">
+          <img [src]="companionPreview()!" alt="Foto del acompañante" class="photo-preview" />
+          <button mat-stroked-button class="change-photo-btn" id="change-photo-btn"
+            (click)="companionPhoto = null; companionPreview.set(null)">
+            <mat-icon>refresh</mat-icon> Cambiar foto
+          </button>
+        </div>
+        }
+
+        <div class="companion-actions">
+          <button mat-stroked-button (click)="closeCompanion()" id="cancel-companion-btn">Cancelar</button>
+          <button mat-flat-button color="primary" (click)="uploadCompanion()" id="upload-companion-btn"
+            [disabled]="!companionPhoto || isUploading()">
+            @if (isUploading()) { <span>Registrando...</span> } @else {
+            <ng-container><mat-icon>upload</mat-icon><span>Registrar</span></ng-container> }
+          </button>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- ===== MY RESERVATIONS ===== -->
+    <section class="reservations-section">
+      <h2 class="section-title">Mis Reservaciones</h2>
+
+      @if (isLoading()) {
+      <div class="loading-state">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+      } @else if (reservations().length === 0) {
+      <mat-card class="empty-state-card">
+        <mat-icon class="empty-icon">event_busy</mat-icon>
+        <h3>No tienes reservaciones</h3>
+        <p>Crea tu primera reservación para comenzar</p>
+      </mat-card>
+      } @else {
+      <div class="reservations-grid">
+        @for (r of reservations(); track r.id) {
+        <mat-card class="reservation-card" [class.expired-card]="isExpired(r)">
+          <div class="reservation-header">
+            <mat-icon class="reservation-icon">directions_car</mat-icon>
+            <mat-chip-set>
+              <mat-chip class="access-code-chip" highlighted>{{ r.accessCode }}</mat-chip>
+            </mat-chip-set>
+          </div>
+          <div class="reservation-body">
+            <div class="reservation-detail">
+              <mat-icon>location_on</mat-icon><span>{{ getParkingName(r.parkingId) }}</span>
+            </div>
+            <div class="reservation-detail">
+              <mat-icon>schedule</mat-icon><span>{{ r.reservedFromTime | date:'shortTime' }}</span>
+            </div>
+            <div class="reservation-detail">
+              <mat-icon>payments</mat-icon><span>S/ {{ r.reservationFee }}</span>
+            </div>
+            <div class="reservation-detail">
+              <mat-icon>info</mat-icon>
+              <span [class.status-pending]="r.status==='PENDING'" [class.status-active]="r.status==='ACTIVE'"
+                [class.status-expired]="r.status==='EXPIRED'||r.status==='CANCELLED'">
+                {{ statusLabel(r.status) }}
+              </span>
+            </div>
+            @if (r.status === 'PENDING') {
+            <div class="arrival-reminder">
+              <mat-icon>alarm</mat-icon>
+              <div>
+                <p class="reminder-label">Llega antes de las {{ getArrivalTime(r.reservedFromTime) }}</p>
+                <p class="countdown">{{ countdowns()[r.id] }} restantes</p>
+              </div>
+            </div>
+            <button mat-stroked-button color="warn" class="cancel-btn" (click)="cancelReservation(r.id)"
+              [id]="'cancel-' + r.id">
+              <mat-icon>cancel</mat-icon> Cancelar
+            </button>
+            }
+            @if (isExpired(r)) {
+            <div class="expired-badge"><mat-icon>cancel</mat-icon>{{ statusLabel(r.status) }}</div>
+            }
+          </div>
+        </mat-card>
+        }
+      </div>
+      }
+    </section>
+
+  </div>
+</div>

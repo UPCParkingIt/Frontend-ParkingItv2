@@ -1,0 +1,135 @@
+<app-driver-toolbar></app-driver-toolbar>
+
+<div class="driver-home-container">
+  <!-- Full Warning Floating Card -->
+  <div class="full-warning" *ngIf="isFull() && !isIntruder()">
+    <mat-icon>error_outline</mat-icon>
+    <span>¡ESTACIONAMIENTO LLENO!<br><small>No hay espacios disponibles.</small></span>
+  </div>
+
+  <!-- INTRUDER MODAL -->
+  <div class="intruder-overlay" *ngIf="isIntruder()">
+    <div class="intruder-card animate-scale-in">
+      <div class="intruder-icon-wrapper">
+        <mat-icon class="pulse-danger">gavel</mat-icon>
+      </div>
+      <h1 class="intruder-title">¡ALERTA DE SEGURIDAD!</h1>
+      <p class="intruder-subtitle">
+        Intento de salida bloqueado para la placa <strong>{{ intruderPlate() }}</strong>.
+      </p>
+      <div class="intruder-details">
+        <mat-icon color="warn">face</mat-icon>
+        <span>El rostro detectado <strong>NO COINCIDE</strong> con el conductor registrado al ingreso.</span>
+      </div>
+      <p class="intruder-action">La seguridad del establecimiento ha sido notificada. Por favor, espere asistencia.</p>
+    </div>
+  </div>
+
+  <div class="driver-home-content animate-scale-in" *ngIf="!isIntruder()">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-icon-wrapper">
+        <mat-icon class="hero-icon">center_focus_strong</mat-icon>
+      </div>
+      <h1 class="hero-title" *ngIf="!welcomeMessage()">Control de Acceso</h1>
+      <h1 class="hero-title text-success" *ngIf="welcomeMessage()">{{ welcomeMessage() }}</h1>
+      <p class="hero-subtitle">Acérquese a la talanquera. El escáner detectará su vehículo automáticamente.</p>
+    </div>
+
+    <!-- Active Scanning State (Plate Polling) -->
+    <div class="scanning-state" [class.success]="welcomeMessage()" *ngIf="!detectedPlate()">
+      <div class="radar-animation" *ngIf="!welcomeMessage()">
+        <div class="radar-circle"></div>
+        <div class="radar-circle delay-1"></div>
+        <div class="radar-circle delay-2"></div>
+        <mat-icon class="radar-icon">camera_alt</mat-icon>
+      </div>
+      
+      <div class="success-animation animate-scale-in" *ngIf="welcomeMessage()">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+      </div>
+      
+      <h2 class="scanning-text">{{ welcomeMessage() ? 'Vehículo Autorizado' : 'Escaneando placa vehicular...' }}</h2>
+    </div>
+
+    <!-- Detected Plate State (Entry or Exit) -->
+    <div *ngIf="detectedPlate() && !welcomeMessage()">
+      
+      <!-- ENTRY FLOW UI -->
+      <div class="driver-menu-content animate-fade-in-up" *ngIf="!isExitFlow()">
+        <h1 class="menu-title">Placa Detectada: {{ detectedPlate() }}</h1>
+        <p class="menu-subtitle">Seleccione su método de ingreso</p>
+
+        <!-- Access Code Option -->
+        <mat-card class="menu-card">
+          <div class="card-header">
+            <div class="card-icon-wrapper">
+              <mat-icon>qr_code</mat-icon>
+            </div>
+            <div>
+              <h2 class="card-title">Código de Reserva</h2>
+              <p class="card-description">Ingrese su código de acceso proporcionado</p>
+            </div>
+          </div>
+
+          <form [formGroup]="accessCodeForm" (ngSubmit)="onSubmitCode()" class="code-form">
+            <mat-form-field appearance="outline" class="code-field">
+              <mat-label>Código de acceso</mat-label>
+              <input matInput formControlName="accessCode" placeholder="ABCDE" maxlength="9"
+                style="text-transform: uppercase; letter-spacing: 0.2em; font-weight: 700; font-size: 18px;" />
+              <mat-icon matPrefix>vpn_key</mat-icon>
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" type="submit" class="submit-btn" [disabled]="isCapturingFace()">
+              <mat-spinner diameter="22" *ngIf="isCapturingFace()"></mat-spinner>
+              <span *ngIf="!isCapturingFace()">Validar Código</span>
+            </button>
+          </form>
+        </mat-card>
+
+        <div class="divider-row">
+          <div class="divider-line"></div>
+          <span class="divider-text">ó</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- Manual Entry Option -->
+        <mat-card class="menu-card manual-card" (click)="!isCapturingFace() && onStartFaceCapture()">
+          <div class="card-header clickable">
+            <div class="card-icon-wrapper manual-icon">
+              <mat-spinner diameter="30" *ngIf="isCapturingFace()"></mat-spinner>
+              <mat-icon *ngIf="!isCapturingFace()">face</mat-icon>
+            </div>
+            <div>
+              <h2 class="card-title">Ingreso Manual</h2>
+              <p class="card-description">{{ isCapturingFace() ? 'Reconociendo rostro...' : 'Continuar sin código de reserva' }}</p>
+            </div>
+            <div>
+              <mat-icon class="arrow-icon" *ngIf="!isCapturingFace()">arrow_forward</mat-icon>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+
+      <!-- EXIT FLOW UI -->
+      <div class="driver-menu-content animate-fade-in-up" *ngIf="isExitFlow()">
+        <h1 class="menu-title">Placa: {{ detectedPlate() }}</h1>
+        <p class="menu-subtitle">Verificando salida</p>
+
+        <mat-card class="action-card exit-card" [class.disabled]="isCapturingFace()" (click)="onStartFaceCapture()">
+          <div class="action-icon-wrapper exit-icon">
+            <mat-spinner diameter="40" *ngIf="isCapturingFace()"></mat-spinner>
+            <mat-icon *ngIf="!isCapturingFace()">logout</mat-icon>
+          </div>
+          <h2 class="action-title">Salir del estacionamiento</h2>
+          <p class="action-description">{{ isCapturingFace() ? 'Reconociendo rostro...' : 'Presione para validar salida' }}</p>
+          <div class="action-arrow" *ngIf="!isCapturingFace()">
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+        </mat-card>
+      </div>
+
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,67 @@
+.thanks-container {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-dark);
+  padding: 32px;
+}
+
+.thanks-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.success-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 32px;
+  box-shadow: 0 12px 40px rgba(105, 231, 206, 0.35);
+  animation: scaleIn 0.6s ease forwards, float 3s ease-in-out 0.6s infinite;
+}
+
+.success-icon {
+  font-size: 60px;
+  width: 60px;
+  height: 60px;
+  color: var(--color-black);
+}
+
+.thanks-title {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.thanks-subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin-bottom: 40px;
+}
+
+.countdown-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.countdown-text {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.countdown-number {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+  margin: 8px 0;
+}

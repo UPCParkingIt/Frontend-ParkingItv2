@@ -1,0 +1,67 @@
+<div class="sign-in-container">
+  <!-- Background decoration -->
+  <div class="bg-decoration">
+    <div class="bg-circle bg-circle-1"></div>
+    <div class="bg-circle bg-circle-2"></div>
+    <div class="bg-circle bg-circle-3"></div>
+  </div>
+
+  <div class="sign-in-content animate-fade-in-up">
+    <!-- Logo & Branding -->
+    <div class="brand-section">
+      <div class="logo-wrapper">
+        <mat-icon class="logo-icon">local_parking</mat-icon>
+      </div>
+      <h1 class="brand-title">Parking<span class="brand-accent">It</span></h1>
+      <p class="brand-subtitle">Sistema de Gestión de Estacionamiento</p>
+    </div>
+
+    <!-- Sign In Card -->
+    <mat-card class="sign-in-card">
+      <mat-card-content>
+        <h2 class="card-title">Iniciar Sesión</h2>
+        <p class="card-description">Ingresa tus credenciales para continuar</p>
+
+        <form [formGroup]="signInForm" (ngSubmit)="onSubmit()" class="sign-in-form">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Correo electrónico</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="ejemplo@correo.com" id="sign-in-email" />
+            <mat-icon matPrefix>email</mat-icon>
+            @if (signInForm.get('email')?.touched && signInForm.get('email')?.invalid) {
+              <mat-error>{{ getFieldError('email') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password" [type]="hidePassword() ? 'password' : 'text'" placeholder="••••••••" id="sign-in-password" />
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()" id="toggle-password-visibility">
+              <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            @if (signInForm.get('password')?.touched && signInForm.get('password')?.invalid) {
+              <mat-error>{{ getFieldError('password') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" class="submit-btn" [disabled]="isLoading()" id="sign-in-submit">
+            @if (isLoading()) {
+              <mat-spinner diameter="22" class="btn-spinner"></mat-spinner>
+            } @else {
+              Iniciar Sesión
+            }
+          </button>
+        </form>
+
+        <div class="forgot-password-link">
+          <a routerLink="/forgot-password" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <div class="sign-up-link">
+          <span>¿No tienes cuenta?</span>
+          <a routerLink="/sign-up" id="go-to-sign-up">Regístrate aquí</a>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
