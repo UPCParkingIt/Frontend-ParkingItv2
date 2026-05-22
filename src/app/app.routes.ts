@@ -64,6 +64,13 @@ export const routes: Routes = [
       import('./parking/pages/admin-home/admin-home.component').then(m => m.AdminHomeComponent),
     canActivate: [adminGuard],
   },
+  
+  // === Setup Route for Kiosk ===
+  {
+    path: 'setup',
+    loadComponent: () =>
+      import('./setup/pages/setup/setup.component').then(m => m.SetupComponent),
+  },
 
   // === Default & Wildcard ===
   { path: '', redirectTo: 'sign-in', pathMatch: 'full' },

@@ -89,6 +89,17 @@ export class ParkingService extends BaseService<ParkingLotEntity> {
   }
 
   /**
+   * PATCH /parking-lots/{id}/yape-qr (multipart/form-data)
+   * Sube una imagen de QR de Yape y actualiza la URL en el estacionamiento.
+   * El backend almacena la imagen en Supabase Storage y persiste la URL pública.
+   */
+  uploadYapeQr(parkingId: string, file: File): Observable<ParkingLotEntity> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.patch<ParkingLotEntity>(`${this.resourcePath()}/${parkingId}/yape-qr`, formData);
+  }
+
+  /**
    * DELETE /parking-lots/{id}
    * Desactiva un estacionamiento (soft delete). Queda en registros pero no disponible para reservas.
    */

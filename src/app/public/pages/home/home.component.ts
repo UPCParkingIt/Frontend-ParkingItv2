@@ -272,9 +272,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.showCompanion.set(false);
         this.snackBar.open('Acompañante registrado correctamente', 'OK', { duration: 3000 });
       },
-      error: () => {
+      error: (err) => {
         this.isUploading.set(false);
-        this.snackBar.open('Error al registrar acompañante', 'OK', { duration: 4000 });
+        if (err.status === 400) {
+            this.snackBar.open('No se puede registrar. Máximo 3 acompañantes permitidos o datos inválidos.', 'OK', { duration: 5000 });
+        } else {
+            this.snackBar.open('Error al registrar acompañante', 'OK', { duration: 4000 });
+        }
       },
     });
   }

@@ -15,6 +15,7 @@ import { LogService } from '../../../logs/services/log.service';
 import { ParkingService } from '../../../parking/services/parking.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { AppConfigService } from '../../../core/services/app-config/app-config.service';
 
 @Component({
   selector: 'app-driver-exit-menu',
@@ -39,6 +40,7 @@ export class DriverExitMenuComponent implements OnInit {
   private http = inject(HttpClient);
   private logService = inject(LogService);
   private parkingService = inject(ParkingService);
+  private appConfigService = inject(AppConfigService);
 
   payment = signal<PaymentEntity | null>(null);
   isLoading = signal(true);
@@ -68,8 +70,7 @@ export class DriverExitMenuComponent implements OnInit {
       // GUEST FLOW (MVP)
       this.isGuestFlow.set(true);
       this.guestLicensePlate.set(this.plateFromState);
-      
-      const parkingId = '5def3b0b-5d35-423e-9922-3889501ae311'; // Match parkingId
+      const parkingId = this.appConfigService.getParkingId();
       
       this.parkingService.getById(parkingId).subscribe({
         next: (parking) => {

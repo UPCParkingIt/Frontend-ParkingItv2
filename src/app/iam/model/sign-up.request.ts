@@ -4,5 +4,5 @@ export interface SignUpRequest {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  dniNumber: string;
+  licensePlate: string;
 }

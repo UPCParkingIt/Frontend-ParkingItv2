@@ -244,6 +244,59 @@
           </div>
         </form>
       </mat-card>
+
+      <!-- QR Yape Upload -->
+      <mat-card class="form-card qr-upload-card">
+        <h2 class="card-title"><mat-icon>qr_code_2</mat-icon>QR de Pago Yape</h2>
+        <p class="qr-upload-hint">
+          Sube la imagen del QR de Yape de tu cuenta. Esta imagen se mostrará al conductor al momento del pago.
+        </p>
+        <div class="qr-upload-body">
+          <!-- Preview -->
+          <div class="qr-preview-box">
+            @if (parking()?.yapeQrUrl) {
+              <img [src]="parking()!.yapeQrUrl" alt="QR Yape actual" class="qr-preview-img" />
+              <span class="qr-preview-label">QR actual</span>
+            } @else {
+              <mat-icon class="qr-preview-placeholder-icon">qr_code_2</mat-icon>
+              <span class="qr-preview-label qr-preview-empty">Sin QR configurado</span>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="qr-upload-actions">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              id="yape-qr-file-input"
+              style="display:none"
+              #qrFileInput
+              (change)="onQrFileSelected($event)"
+            />
+            <button
+              mat-flat-button
+              color="primary"
+              id="upload-yape-qr-trigger"
+              [disabled]="isUploadingQr()"
+              (click)="qrFileInput.click()"
+            >
+              @if (isUploadingQr()) {
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Subiendo...</span>
+              } @else {
+                <mat-icon>upload</mat-icon>
+              }
+              <span>{{ parking()?.yapeQrUrl ? 'Cambiar QR' : 'Subir QR' }}</span>
+            </button>
+            @if (parking()?.yapeQrUrl) {
+              <p class="qr-current-url">
+                <mat-icon style="font-size:14px;width:14px;height:14px">link</mat-icon>
+                Almacenado en Supabase Storage
+              </p>
+            }
+          </div>
+        </div>
+      </mat-card>
     </div>
     }
 

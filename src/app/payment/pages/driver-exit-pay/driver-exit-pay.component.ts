@@ -9,6 +9,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DriverToolbarComponent } from '../../../recognition/components/driver-toolbar/driver-toolbar.component';
 import { PaymentService } from '../../services/payment.service';
+import { ParkingService } from '../../../parking/services/parking.service';
+import { WebSocketService } from '../../../shared/services/websocket.service';
+import { environment } from '../../../../environments/environment';
+import { AppConfigService } from '../../../core/services/app-config/app-config.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-driver-exit-pay',
@@ -28,12 +33,15 @@ import { PaymentService } from '../../services/payment.service';
 export class DriverExitPayComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private paymentService = inject(PaymentService);
+  private parkingService = inject(ParkingService);
   private snackBar = inject(MatSnackBar);
+  private appConfigService = inject(AppConfigService);
 
   isConfirming = signal(false);
   isAwaitingAdmin = signal(false);
   hasFailed = signal(false);
   failureReason = signal<string | null>(null);
+  yapeQrUrl = signal<string | null>(null);
 
   /** Recibe paymentId y amount del navigation state enviado por driver-exit-menu */
   private state = (this.router.getCurrentNavigation()?.extras.state as any) ?? {};
@@ -42,15 +50,29 @@ export class DriverExitPayComponent implements OnInit, OnDestroy {
   paymentMethod: string = this.state.paymentMethod ?? 'YAPE';
 
   private pollingInterval: any;
+  private wsSubscription?: Subscription;
+  private wsService = inject(WebSocketService);
 
   ngOnInit(): void {
     if (!this.paymentId) {
       this.router.navigate(['/driver/home']);
     }
+    // Load Yape QR URL from environment properties or fallback to database
+    if (environment.yapeQrUrl) {
+      this.yapeQrUrl.set(environment.yapeQrUrl);
+    } else {
+      this.parkingService.getById(this.appConfigService.getParkingId()).subscribe({
+        next: (parking) => this.yapeQrUrl.set(parking.yapeQrUrl ?? null),
+        error: () => {} // Fallback: icon placeholder will be shown
+      });
+    }
   }
 
   ngOnDestroy(): void {
     this.stopPolling();
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+    }
   }
 
   /**
@@ -84,6 +106,23 @@ export class DriverExitPayComponent implements OnInit, OnDestroy {
   }
 
   private startPolling(): void {
+    // Suscripción usando WebSockets
+    const topic = `/topic/payments/${this.paymentId}`;
+    this.wsSubscription = this.wsService.getStompClient().watch(topic).subscribe((message) => {
+      const payload = JSON.parse(message.body);
+      
+      if (payload.status === 'COMPLETED') {
+        this.stopPolling();
+        this.router.navigate(['/thanks']);
+      } else if (payload.status === 'FAILED') {
+        this.stopPolling();
+        this.isAwaitingAdmin.set(false);
+        this.hasFailed.set(true);
+        this.failureReason.set(payload.failureReason ?? 'El administrador rechazó el pago.');
+      }
+    });
+
+    // Como respaldo o para entorno sin WebSocket, mantenemos un polling pero mucho más lento (cada 15s)
     this.pollingInterval = setInterval(() => {
       this.paymentService.getById(this.paymentId!).subscribe({
         next: (payment) => {
@@ -98,13 +137,17 @@ export class DriverExitPayComponent implements OnInit, OnDestroy {
           }
         }
       });
-    }, 3000); // Poll every 3 seconds
+    }, 15000); // 15 seconds polling as fallback
   }
 
   private stopPolling(): void {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
+    }
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+      this.wsSubscription = undefined;
     }
   }
 }

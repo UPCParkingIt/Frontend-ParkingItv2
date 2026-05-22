@@ -13,7 +13,11 @@ import { DriverToolbarComponent } from '../../components/driver-toolbar/driver-t
 import { RecognitionProcessService } from '../../services/recognition-process.service';
 import { ParkingService } from '../../../parking/services/parking.service';
 import { ReservationService } from '../../../reservations/services/reservation.service';
+import { WebSocketService } from '../../../shared/services/websocket.service';
 import { signal, OnInit, OnDestroy } from '@angular/core';
+import { environment } from '../../../../environments/environment';
+import { AppConfigService } from '../../../core/services/app-config/app-config.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-driver-home',
@@ -39,6 +43,7 @@ export class DriverHomeComponent implements OnInit, OnDestroy {
   private reservationService = inject(ReservationService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+  private wsService = inject(WebSocketService);
 
   isLoading = signal(false);
   isFull = signal(false);
@@ -56,19 +61,24 @@ export class DriverHomeComponent implements OnInit, OnDestroy {
 
   private pollingInterval: any;
   private platePollingInterval: any;
-  private matchPollingInterval: any;
-  private readonly PARKING_ID = '5def3b0b-5d35-423e-9922-3889501ae311';
+  private matchPollingInterval: any;   // polls edge /latest-match after face capture
+  private wsSubscription?: Subscription;
+  
+  private appConfigService = inject(AppConfigService);
+  private get PARKING_ID() { return this.appConfigService.getParkingId(); }
 
   ngOnInit() {
     this.checkOccupancy();
     this.pollingInterval = setInterval(() => this.checkOccupancy(), 10000);
     this.startPlatePolling();
+    this.setupWebSocket();
   }
 
   ngOnDestroy() {
-    if (this.matchPollingInterval) clearInterval(this.matchPollingInterval);
+    if (this.wsSubscription) this.wsSubscription.unsubscribe();
     if (this.platePollingInterval) clearInterval(this.platePollingInterval);
     if (this.pollingInterval) clearInterval(this.pollingInterval);
+    if (this.matchPollingInterval) clearInterval(this.matchPollingInterval);
   }
 
   private checkOccupancy() {
@@ -111,59 +121,96 @@ export class DriverHomeComponent implements OnInit, OnDestroy {
 
     this.isCapturingFace.set(true);
     
-    // Solicitar al backend Edge (Python) que capture y guarde el rostro actual
+    // Solicitar al Edge (Python) que capture el rostro actual.
+    // quick-capture ya llama clearLastMatch() en el edge, así el poll no leerá resultados viejos.
     this.recognitionService.requestQuickCapture().subscribe({
       next: () => {
-        console.log('Captura de rostro solicitada al Edge');
-        this.pollForMatch();
+        console.log('[Driver] Captura solicitada. Iniciando poll del Edge cada 1s...');
+        this.startMatchPolling();
       },
-      error: (err) => {
+      error: () => {
         this.isCapturingFace.set(false);
         this.snackBar.open('Error solicitando captura', 'Cerrar', { duration: 3000 });
       }
     });
   }
 
-  private pollForMatch(): void {
+  /** Poll the edge /latest-match every 1 second until we get a result (max 30 s) */
+  private startMatchPolling(): void {
+    if (this.matchPollingInterval) clearInterval(this.matchPollingInterval);
+    let attempts = 0;
+    const MAX_ATTEMPTS = 30;
+
     this.matchPollingInterval = setInterval(() => {
+      if (!this.isCapturingFace()) {
+        // WebSocket already resolved it — stop polling
+        clearInterval(this.matchPollingInterval);
+        return;
+      }
+
+      attempts++;
+      if (attempts > MAX_ATTEMPTS) {
+        clearInterval(this.matchPollingInterval);
+        this.isCapturingFace.set(false);
+        this.snackBar.open('Tiempo de espera agotado. Intente de nuevo.', 'Cerrar', {
+          duration: 4000,
+          panelClass: ['error-snackbar']
+        });
+        return;
+      }
+
       this.recognitionService.getLatestMatch().subscribe({
         next: (res) => {
-          if (res && res.status !== 'WAITING') {
+          // Match is available when response has a licensePlate (WAITING response never has it)
+          if (res && (res.licensePlate || (res.status && res.status !== 'WAITING'))) {
+            console.log('[Driver] Match recibido del Edge (poll):', res);
             clearInterval(this.matchPollingInterval);
-            this.isCapturingFace.set(false);
-            
-            if (res.isMatched === false) {
-              this.intruderPlate.set(res.licensePlate);
-              this.isIntruder.set(true);
-              
-              this.snackBar.open('❌ ACCESO DENEGADO: Rostro no coincide.', 'Cerrar', { 
-                duration: 8000,
-                panelClass: ['error-snackbar']
-              });
-              
-              setTimeout(() => {
-                this.isIntruder.set(false);
-                this.resetFlow();
-              }, 8000);
-              
-              return;
-            }
-
-            if (res.mode === 'EXIT') {
-              this.router.navigate(['/driver/exit/menu'], {
-                state: { licensePlate: res.licensePlate, entryLogId: res.entryLogId }
-              });
-            } else {
-              this.welcomeMessage.set(`¡Bienvenido!`);
-              setTimeout(() => {
-                this.resetFlow();
-              }, 3000);
-            }
+            this.handleMatchResult(res);
           }
         },
-        error: () => {}
+        error: () => {} // ignore transient errors, keep polling
       });
-    }, 2000);
+    }, 1000);
+  }
+
+  private setupWebSocket(): void {
+    const topic = `/topic/parking/${this.PARKING_ID}/matches`;
+    this.wsSubscription = this.wsService.getStompClient().watch(topic).subscribe((message) => {
+      const res = JSON.parse(message.body);
+      console.log('[Driver] Mensaje WebSocket recibido:', res);
+      if (this.isCapturingFace()) {
+        if (this.matchPollingInterval) clearInterval(this.matchPollingInterval);
+        this.handleMatchResult(res);
+      }
+    });
+  }
+
+  /** Shared handler for match results coming from either edge polling OR WebSocket */
+  private handleMatchResult(res: any): void {
+    this.isCapturingFace.set(false);
+
+    if (res.isMatched === false) {
+      this.intruderPlate.set(res.licensePlate);
+      this.isIntruder.set(true);
+      this.snackBar.open('❌ ACCESO DENEGADO: Rostro no coincide.', 'Cerrar', {
+        duration: 8000,
+        panelClass: ['error-snackbar']
+      });
+      setTimeout(() => {
+        this.isIntruder.set(false);
+        this.resetFlow();
+      }, 8000);
+      return;
+    }
+
+    if (res.mode === 'EXIT') {
+      this.router.navigate(['/driver/exit/menu'], {
+        state: { licensePlate: res.licensePlate, entryLogId: res.entryLogId }
+      });
+    } else {
+      this.welcomeMessage.set(`¡Bienvenido!`);
+      setTimeout(() => this.resetFlow(), 3000);
+    }
   }
 
   onSubmitCode(): void {

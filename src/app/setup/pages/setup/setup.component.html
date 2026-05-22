@@ -1,0 +1,25 @@
+<div class="setup-container">
+  <mat-card class="setup-card">
+    <mat-card-header>
+      <mat-card-title>Configuración de Kiosko</mat-card-title>
+      <mat-card-subtitle>Conectar al Backend Edge Local</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <p class="description">
+        Ingresa la URL del backend Edge (por ejemplo, la IP de la computadora local donde está corriendo, como http://192.168.1.50:9090).
+      </p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>URL del Edge</mat-label>
+        <input matInput [(ngModel)]="edgeUrl" placeholder="http://localhost:9090" [disabled]="isLoading">
+      </mat-form-field>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-flat-button color="primary" (click)="saveConfiguration()" [disabled]="isLoading">
+        {{ isLoading ? 'Conectando...' : 'Guardar y Conectar' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

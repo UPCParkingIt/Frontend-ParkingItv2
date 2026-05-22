@@ -44,7 +44,7 @@ export class SignUpComponent extends BaseFormComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^\+?[0-9]{7,15}$/)]],
-      dniNumber: ['', [Validators.required, Validators.minLength(8)]],
+      licensePlate: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 

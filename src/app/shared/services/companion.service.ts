@@ -13,21 +13,18 @@ import { Observable } from 'rxjs';
  *   - 'id'   → logged-in user UUID
  *   - 'foto' → photo File object
  */
+import { environment } from '../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class CompanionService {
   private http = inject(HttpClient);
-  private readonly edgeUrl = 'https://parking-it-edge-wcnjz.ondigitalocean.app/api/registrar';
+  private readonly apiUrl = `${environment.baseUrl}/authentication/companions`;
 
   register(userId: string, photo: File): Observable<any> {
     const formData = new FormData();
-    formData.append('id_usuario', userId);  // field name required by the edge API
-    formData.append('foto', photo, photo.name);
+    formData.append('faceImage', photo, photo.name);
 
-    // Pass empty HttpHeaders so the browser sets the correct
-    // Content-Type: multipart/form-data; boundary=... automatically
-    const headers = new HttpHeaders();
-
-    return this.http.post(this.edgeUrl, formData, { headers });
+    return this.http.post(this.apiUrl, formData);
   }
 }
 

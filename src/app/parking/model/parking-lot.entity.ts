@@ -15,4 +15,5 @@ export interface ParkingLotEntity {
   businessDays: string;
   status: string;
   adminUserId: string;
+  yapeQrUrl?: string;
 }

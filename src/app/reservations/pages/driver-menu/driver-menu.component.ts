@@ -12,6 +12,10 @@ import { DriverToolbarComponent } from '../../../recognition/components/driver-t
 import { ReservationService } from '../../services/reservation.service';
 import { RecognitionProcessService } from '../../../recognition/services/recognition-process.service';
 import { CommonModule } from '@angular/common';
+import { WebSocketService } from '../../../shared/services/websocket.service';
+import { environment } from '../../../../environments/environment';
+import { AppConfigService } from '../../../core/services/app-config/app-config.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-driver-menu',
@@ -36,12 +40,21 @@ export class DriverMenuComponent {
   private reservationService = inject(ReservationService);
   private recognitionService = inject(RecognitionProcessService);
   private fb = inject(FormBuilder);
+  private wsService = inject(WebSocketService);
 
   accessCodeForm: FormGroup = this.fb.group({
     accessCode: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(9)]],
   });
 
   isLoading = signal(false);
+  private wsSubscription?: Subscription;
+  
+  private appConfigService = inject(AppConfigService);
+  private get PARKING_ID() { return this.appConfigService.getParkingId(); }
+
+  ngOnDestroy() {
+    if (this.wsSubscription) this.wsSubscription.unsubscribe();
+  }
 
   onSubmitCode(): void {
     if (this.accessCodeForm.invalid) {
@@ -91,27 +104,26 @@ export class DriverMenuComponent {
   }
 
   private pollLatestMatch(): void {
-    const pollInterval = setInterval(() => {
-      this.recognitionService.getLatestMatch().subscribe({
-        next: (res) => {
-          if (res && res.status !== 'WAITING') {
-            clearInterval(pollInterval);
-            this.isLoading.set(false);
-            this.router.navigate(['/thanks']);
-          }
-        },
-        error: () => {
-          clearInterval(pollInterval);
-          this.isLoading.set(false);
-          this.snackBar.open('Error de conexión con cámaras', 'Cerrar', { duration: 3000 });
+    const topic = `/topic/parking/${this.PARKING_ID}/matches`;
+    this.wsSubscription = this.wsService.getStompClient().watch(topic).subscribe((message) => {
+      const res = JSON.parse(message.body);
+      if (res && res.mode === 'ENTRY') {
+        if (this.wsSubscription) {
+          this.wsSubscription.unsubscribe();
+          this.wsSubscription = undefined;
         }
-      });
-    }, 2000); // Poll every 2 seconds
+        this.isLoading.set(false);
+        this.router.navigate(['/thanks']);
+      }
+    });
 
-    // Stop polling after 30 seconds if no match
+    // Stop waiting after 30 seconds if no match
     setTimeout(() => {
-      clearInterval(pollInterval);
       if (this.isLoading()) {
+        if (this.wsSubscription) {
+          this.wsSubscription.unsubscribe();
+          this.wsSubscription = undefined;
+        }
         this.isLoading.set(false);
         this.snackBar.open('Tiempo de espera agotado. Intente nuevamente.', 'Cerrar', { duration: 4000 });
       }

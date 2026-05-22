@@ -71,11 +71,11 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="form-field">
-              <mat-label>DNI</mat-label>
-              <input matInput formControlName="dniNumber" placeholder="12345678" id="sign-up-dni" />
-              <mat-icon matPrefix>badge</mat-icon>
-              @if (signUpForm.get('dniNumber')?.touched && signUpForm.get('dniNumber')?.invalid) {
-                <mat-error>{{ getFieldError('dniNumber') }}</mat-error>
+              <mat-label>Placa de vehículo</mat-label>
+              <input matInput formControlName="licensePlate" placeholder="ABC-123" id="sign-up-license-plate" />
+              <mat-icon matPrefix>directions_car</mat-icon>
+              @if (signUpForm.get('licensePlate')?.touched && signUpForm.get('licensePlate')?.invalid) {
+                <mat-error>{{ getFieldError('licensePlate') }}</mat-error>
               }
             </mat-form-field>
           </div>

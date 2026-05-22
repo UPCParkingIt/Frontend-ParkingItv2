@@ -15,7 +15,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
-
+import { ToastrService } from 'ngx-toastr';
+import { Subscription } from 'rxjs';
 import { AuthenticationService } from '../../../iam/services/authentication.service';
 import { ParkingService } from '../../services/parking.service';
 import { AlertService } from '../../services/alert.service';
@@ -23,6 +24,7 @@ import { PromotionService } from '../../services/promotion.service';
 import { ReservationService } from '../../../reservations/services/reservation.service';
 import { LogService } from '../../../logs/services/log.service';
 import { PaymentService } from '../../../payment/services/payment.service';
+import { WebSocketService } from '../../../shared/services/websocket.service';
 import { ParkingLotEntity } from '../../model/parking-lot.entity';
 import { PaymentEntity } from '../../../payment/model/payment.entity';
 import { OccupancyInfoEntity } from '../../model/occupancy-info.entity';
@@ -90,6 +92,8 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
+  private toastr = inject(ToastrService);
+  private wsService = inject(WebSocketService);
 
   // ── State ──────────────────────────────────────────────────
   activeSection = signal<AdminSection>('dashboard');
@@ -106,8 +110,11 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   isLoading = signal(true);
   isSaving = signal(false);
   isLoadingSection = signal(false);
+  isUploadingQr = signal(false);
   sidebarCollapsed = signal(false);
-  private refreshInterval: any;
+  
+  private matchSub?: Subscription;
+  private paymentSub?: Subscription;
 
   // ── Forms ──────────────────────────────────────────────────
   parkingForm!: FormGroup;
@@ -156,21 +163,11 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.buildForms();
     this.loadParkingData();
-
-    // Auto-refresh occupancy, stats, and pending payments every 5 seconds
-    this.refreshInterval = setInterval(() => {
-      if (this.parking()) {
-        this.loadOccupancy(this.parking()!.id);
-        this.loadStats(this.parking()!.id);
-        this.loadPendingPayments();
-      }
-    }, 5000);
   }
 
   ngOnDestroy(): void {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
+    this.matchSub?.unsubscribe();
+    this.paymentSub?.unsubscribe();
   }
 
   private buildForms(): void {
@@ -215,6 +212,34 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
         this.loadReservations(data.id);
         this.loadAccessLogs(data.id);
         this.loadPendingPayments();
+
+        // WebSocket Subscriptions
+        this.matchSub = this.wsService.getStompClient().watch(`/topic/parking/${data.id}/matches`).subscribe((message: any) => {
+          if (message.body) {
+            const msg = JSON.parse(message.body);
+            this.loadOccupancy(data.id);
+            this.loadStats(data.id);
+            this.loadAccessLogs(data.id);
+            
+            if (msg.isMatched === false || msg.isMatched === 'false') {
+              this.loadAlerts(data.id);
+              this.loadFacialAlerts(data.id);
+              this.toastr.error('¡Alerta de Intruso!', 'Seguridad');
+            } else if (msg.isMatched === true || msg.isMatched === 'true') {
+              this.toastr.success(`Vehículo autorizado`, 'Estacionamiento');
+            }
+          }
+        });
+
+        this.paymentSub = this.wsService.getStompClient().watch(`/topic/admin/payments`).subscribe((message: any) => {
+          if (message.body) {
+            const msg = JSON.parse(message.body);
+            if (msg.action === 'NEW_PAYMENT_PENDING') {
+              this.loadPendingPayments();
+              this.toastr.info('Nuevo pago pendiente de aprobación', 'Pagos');
+            }
+          }
+        });
       },
       error: () => {
         this.isLoading.set(false);
@@ -384,6 +409,34 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
         this.snackBar.open('Tarifas actualizadas', 'OK', { duration: 3000 });
       },
       error: () => { this.isSaving.set(false); this.snackBar.open('Error al actualizar tarifas', 'OK', { duration: 3000 }); },
+    });
+  }
+
+  // ── Yape QR Upload ──────────────────────────────────────────
+  onQrFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.parking()) return;
+
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.snackBar.open('Solo se permiten imágenes PNG, JPG o WebP', 'OK', { duration: 4000 });
+      return;
+    }
+
+    this.isUploadingQr.set(true);
+    this.parkingService.uploadYapeQr(this.parking()!.id, file).subscribe({
+      next: (updated) => {
+        this.parking.set(updated);
+        this.isUploadingQr.set(false);
+        this.snackBar.open('QR de Yape actualizado exitosamente', 'OK', { duration: 3000 });
+        // Reset input so the same file can be re-selected if needed
+        input.value = '';
+      },
+      error: () => {
+        this.isUploadingQr.set(false);
+        this.snackBar.open('Error al subir el QR. Intente nuevamente.', 'OK', { duration: 4000 });
+      },
     });
   }
 

@@ -30,7 +30,11 @@
         <mat-card class="payment-card">
           <div class="qr-section">
             <div class="qr-placeholder">
-              <mat-icon class="qr-icon">qr_code_2</mat-icon>
+              @if (yapeQrUrl()) {
+                <img [src]="yapeQrUrl()" alt="QR Yape" class="qr-image" />
+              } @else {
+                <mat-icon class="qr-icon">qr_code_2</mat-icon>
+              }
               <p class="qr-text">Escanea para pagar con Yape</p>
             </div>
           </div>
