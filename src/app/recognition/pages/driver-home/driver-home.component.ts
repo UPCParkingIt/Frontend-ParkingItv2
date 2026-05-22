@@ -16,7 +16,6 @@ import { ReservationService } from '../../../reservations/services/reservation.s
 import { WebSocketService } from '../../../shared/services/websocket.service';
 import { signal, OnInit, OnDestroy } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { AppConfigService } from '../../../core/services/app-config/app-config.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -64,8 +63,7 @@ export class DriverHomeComponent implements OnInit, OnDestroy {
   private matchPollingInterval: any;   // polls edge /latest-match after face capture
   private wsSubscription?: Subscription;
   
-  private appConfigService = inject(AppConfigService);
-  private get PARKING_ID() { return this.appConfigService.getParkingId(); }
+  private PARKING_ID = environment.parkingId;
 
   ngOnInit() {
     this.checkOccupancy();

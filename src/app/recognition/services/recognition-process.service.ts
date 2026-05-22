@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AppConfigService } from '../../core/services/app-config/app-config.service';
 
 export interface RecognitionStatus {
   faceRecognized: boolean;
@@ -13,9 +12,8 @@ export interface RecognitionStatus {
 @Injectable({ providedIn: 'root' })
 export class RecognitionProcessService {
   private http: HttpClient = inject(HttpClient);
-  private appConfigService = inject(AppConfigService);
   private basePath: string = `${environment.baseUrl}/recognition`;
-  private get edgePath(): string { return `${this.appConfigService.getEdgeUrl()}/edge/api/v1/recognition`; }
+  private edgePath: string = `${environment.edgeUrl}/recognition`;
 
   getStatus(): Observable<RecognitionStatus> {
     return this.http.get<RecognitionStatus>(`${this.basePath}/status`);

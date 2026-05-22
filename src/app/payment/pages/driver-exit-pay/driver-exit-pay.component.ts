@@ -12,7 +12,6 @@ import { PaymentService } from '../../services/payment.service';
 import { ParkingService } from '../../../parking/services/parking.service';
 import { WebSocketService } from '../../../shared/services/websocket.service';
 import { environment } from '../../../../environments/environment';
-import { AppConfigService } from '../../../core/services/app-config/app-config.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -35,7 +34,6 @@ export class DriverExitPayComponent implements OnInit, OnDestroy {
   private paymentService = inject(PaymentService);
   private parkingService = inject(ParkingService);
   private snackBar = inject(MatSnackBar);
-  private appConfigService = inject(AppConfigService);
 
   isConfirming = signal(false);
   isAwaitingAdmin = signal(false);
@@ -61,7 +59,7 @@ export class DriverExitPayComponent implements OnInit, OnDestroy {
     if (environment.yapeQrUrl) {
       this.yapeQrUrl.set(environment.yapeQrUrl);
     } else {
-      this.parkingService.getById(this.appConfigService.getParkingId()).subscribe({
+      this.parkingService.getById(environment.parkingId).subscribe({
         next: (parking) => this.yapeQrUrl.set(parking.yapeQrUrl ?? null),
         error: () => {} // Fallback: icon placeholder will be shown
       });
