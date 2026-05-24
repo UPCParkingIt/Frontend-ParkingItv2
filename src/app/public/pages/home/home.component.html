@@ -242,11 +242,13 @@
 
         <div class="companion-actions">
           <button mat-stroked-button (click)="closeCompanion()" id="cancel-companion-btn">Cancelar</button>
-          <button mat-flat-button color="primary" (click)="uploadCompanion()" id="upload-companion-btn"
-            [disabled]="!companionPhoto || isUploading()">
-            @if (isUploading()) { <span>Registrando...</span> } @else {
-            <ng-container><mat-icon>upload</mat-icon><span>Registrar</span></ng-container> }
-          </button>
+            <button mat-flat-button color="primary" (click)="uploadCompanion()" id="upload-companion-btn"
+              [disabled]="!companionPhoto || isUploading()">
+              @if (!isUploading()) {
+                <mat-icon>upload</mat-icon>
+              }
+              <span>{{ isUploading() ? 'Registrando...' : 'Registrar' }}</span>
+            </button>
         </div>
       </div>
     </div>
@@ -311,6 +313,37 @@
             <div class="expired-badge"><mat-icon>cancel</mat-icon>{{ statusLabel(r.status) }}</div>
             }
           </div>
+        </mat-card>
+        }
+      </div>
+      }
+    </section>
+
+    <!-- ===== MY COMPANIONS ===== -->
+    <section class="companions-section">
+      <h2 class="section-title">Mis Acompañantes ({{ uploadedCompanions().length }}/3)</h2>
+
+      @if (uploadedCompanions().length === 0) {
+      <mat-card class="empty-state-card">
+        <mat-icon class="empty-icon">group_off</mat-icon>
+        <h3>No tienes acompañantes</h3>
+        <p>Registra a tus acompañantes para que puedan ingresar contigo</p>
+      </mat-card>
+      } @else {
+      <div class="companions-grid">
+        @for (c of uploadedCompanions(); track c.id) {
+        <mat-card class="companion-card">
+          <img [src]="c.faceImageS3Url" alt="Acompañante" class="companion-avatar" />
+          <div class="companion-info">
+            <p class="companion-status" [class.verified]="c.isVerified">
+              <mat-icon>{{ c.isVerified ? 'check_circle' : 'pending' }}</mat-icon>
+              {{ c.isVerified ? 'Verificado' : 'Pendiente' }}
+            </p>
+            <p class="companion-date">Añadido el {{ c.createdAt | date:'shortDate' }}</p>
+          </div>
+          <button mat-icon-button color="warn" (click)="deleteCompanion(c.id)" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
         </mat-card>
         }
       </div>

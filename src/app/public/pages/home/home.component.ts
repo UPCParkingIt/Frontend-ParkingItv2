@@ -66,6 +66,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   companionPhoto: File | null = null;
   companionPreview = signal<string | null>(null);
   isUploading = signal(false);
+  uploadedCompanions = signal<any[]>([]);
   private cameraStream: MediaStream | null = null;
 
   // Countdowns
@@ -113,6 +114,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (lots) => this.parkingLots.set(lots),
       error: () => {},
     });
+    
+    this.companionService.getCompanions().subscribe({
+      next: (comp) => this.uploadedCompanions.set(comp),
+      error: () => {}
+    });
+
     const userId = this.authService.getUserId();
     if (userId) {
       this.reservationService.getByUserId(userId).subscribe({
@@ -198,6 +205,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // === Companion ===
   openCompanion(): void {
+    if (this.uploadedCompanions().length >= 3) {
+      this.snackBar.open('Has alcanzado el límite máximo de 3 acompañantes.', 'OK', { duration: 4000 });
+      return;
+    }
     this.showCompanion.set(true);
     this.showWizard.set(false);
     this.companionPhoto = null;
@@ -271,6 +282,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.isUploading.set(false);
         this.showCompanion.set(false);
         this.snackBar.open('Acompañante registrado correctamente', 'OK', { duration: 3000 });
+        this.loadData(); // refresh list
       },
       error: (err) => {
         this.isUploading.set(false);
@@ -280,6 +292,17 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.snackBar.open('Error al registrar acompañante', 'OK', { duration: 4000 });
         }
       },
+    });
+  }
+
+  deleteCompanion(id: string): void {
+    if (!confirm('¿Estás seguro de eliminar este acompañante?')) return;
+    this.companionService.deleteCompanion(id).subscribe({
+      next: () => {
+        this.uploadedCompanions.update(list => list.filter(c => c.id !== id));
+        this.snackBar.open('Acompañante eliminado', 'OK', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Error al eliminar', 'OK', { duration: 4000 })
     });
   }
 

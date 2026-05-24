@@ -26,5 +26,13 @@ export class CompanionService {
 
     return this.http.post(this.apiUrl, formData);
   }
+
+  getCompanions(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl);
+  }
+
+  deleteCompanion(companionId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${companionId}`);
+  }
 }
 

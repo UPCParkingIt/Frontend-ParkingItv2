@@ -236,7 +236,12 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
             const msg = JSON.parse(message.body);
             if (msg.action === 'NEW_PAYMENT_PENDING') {
               this.loadPendingPayments();
-              this.toastr.info('Nuevo pago pendiente de aprobación', 'Pagos');
+              const toast = this.toastr.info('Nuevo pago pendiente de aprobación', 'Pagos', {
+                tapToDismiss: true
+              });
+              toast.onTap.subscribe(() => {
+                this.navigateTo('pending-payments');
+              });
             }
           }
         });

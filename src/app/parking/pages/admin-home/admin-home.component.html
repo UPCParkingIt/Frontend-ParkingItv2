@@ -113,36 +113,7 @@
         <mat-progress-bar mode="determinate" [value]="occupancyRate" class="occ-bar"></mat-progress-bar>
       </div>
 
-      @if (stats()) {
-      <div class="stats-row-grid">
-        <mat-card class="stat-detail-card">
-          <mat-icon>login</mat-icon>
-          <div><span class="sd-val">{{ stats()!.totalEntries }}</span><span class="sd-lbl">Entradas</span></div>
-        </mat-card>
-        <mat-card class="stat-detail-card">
-          <mat-icon>logout</mat-icon>
-          <div><span class="sd-val">{{ stats()!.totalExits }}</span><span class="sd-lbl">Salidas</span></div>
-        </mat-card>
-        <mat-card class="stat-detail-card">
-          <mat-icon>verified</mat-icon>
-          <div><span class="sd-val">{{ stats()!.matchedExits }}</span><span class="sd-lbl">Salidas OK</span></div>
-        </mat-card>
-        <mat-card class="stat-detail-card stat-danger">
-          <mat-icon>gpp_bad</mat-icon>
-          <div><span class="sd-val">{{ stats()!.failedExits }}</span><span class="sd-lbl">Salidas fallidas</span></div>
-        </mat-card>
-        <mat-card class="stat-detail-card">
-          <mat-icon>timer</mat-icon>
-          <div><span class="sd-val">{{ stats()!.averageOccupancyMinutes | number:'1.0-0' }}m</span><span
-              class="sd-lbl">Duración prom.</span></div>
-        </mat-card>
-        <mat-card class="stat-detail-card">
-          <mat-icon>percent</mat-icon>
-          <div><span class="sd-val">{{ stats()!.occupancyRate | number:'1.1-1' }}%</span><span class="sd-lbl">Tasa
-              histórica</span></div>
-        </mat-card>
-      </div>
-      }
+
 
       <div class="quick-actions">
         <h2 class="subsection-title">Acciones Rápidas</h2>
