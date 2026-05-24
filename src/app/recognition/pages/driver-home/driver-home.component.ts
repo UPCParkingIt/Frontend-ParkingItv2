@@ -205,7 +205,12 @@ export class DriverHomeComponent implements OnInit, OnDestroy {
       this.router.navigate(['/driver/exit/menu'], {
         state: { licensePlate: res.licensePlate, entryLogId: res.entryLogId }
       });
+    } else if (res.mode === 'MANUAL_ENTRY') {
+      // Ingreso manual sin placa detectada → navegar directamente al menú sin crear entry_log
+      this.welcomeMessage.set(`¡Bienvenido!`);
+      setTimeout(() => this.resetFlow(), 3000);
     } else {
+      // ENTRY normal con placa detectada → el Edge ya sincronizó con el Cloud
       this.welcomeMessage.set(`¡Bienvenido!`);
       setTimeout(() => this.resetFlow(), 3000);
     }
