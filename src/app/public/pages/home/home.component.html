@@ -118,7 +118,8 @@
             <span class="warn-icon material-icons">notifications_active</span>
             <div>
               <p class="warning-title">Llega 15 minutos antes</p>
-              <p class="warning-text">Debes llegar al estacionamiento 15 minutos antes de tu hora reservada para reclamar tu espacio. Si no llegas a tiempo, tu reserva se cancelará automáticamente.</p>
+              <p class="warning-text">Debes llegar al estacionamiento 15 minutos antes de tu hora reservada para
+                reclamar tu espacio. Si no llegas a tiempo, tu reserva se cancelará automáticamente.</p>
             </div>
           </div>
 
@@ -130,7 +131,7 @@
               <input type="time" id="start-time-input" formControlName="startTime" [min]="minTime" class="time-input" />
             </div>
             @if (timeForm.get('startTime')?.invalid && timeForm.get('startTime')?.touched) {
-              <p class="field-error">Selecciona una hora válida (al menos 15 min desde ahora)</p>
+            <p class="field-error">Selecciona una hora válida (al menos 15 min desde ahora)</p>
             }
           </div>
 
@@ -242,13 +243,13 @@
 
         <div class="companion-actions">
           <button mat-stroked-button (click)="closeCompanion()" id="cancel-companion-btn">Cancelar</button>
-            <button mat-flat-button color="primary" (click)="uploadCompanion()" id="upload-companion-btn"
-              [disabled]="!companionPhoto || isUploading()">
-              @if (!isUploading()) {
-                <mat-icon>upload</mat-icon>
-              }
-              <span>{{ isUploading() ? 'Registrando...' : 'Registrar' }}</span>
-            </button>
+          <button mat-flat-button color="primary" (click)="uploadCompanion()" id="upload-companion-btn"
+            [disabled]="!companionPhoto || isUploading()">
+            @if (!isUploading()) {
+            <mat-icon>upload</mat-icon>
+            }
+            <span>{{ isUploading() ? 'Registrando...' : 'Registrar' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -341,7 +342,7 @@
             </p>
             <p class="companion-date">Añadido el {{ c.createdAt | date:'shortDate' }}</p>
           </div>
-          <button mat-icon-button color="warn" (click)="deleteCompanion(c.id)" matTooltip="Eliminar">
+          <button mat-icon-button color="warn" (click)="confirmDeleteCompanion(c.id)" matTooltip="Eliminar">
             <mat-icon>delete</mat-icon>
           </button>
         </mat-card>
@@ -349,6 +350,24 @@
       </div>
       }
     </section>
-
+    <!-- ===== DELETE COMPANION MODAL ===== -->
+    @if (showDeleteModal()) {
+    <div class="panel-overlay animate-fade-in-up">
+      <div class="panel-card" style="max-width: 450px;">
+        <div class="panel-header">
+          <h2><mat-icon color="warn">warning</mat-icon> Confirmar Eliminación</h2>
+          <button mat-icon-button (click)="closeDeleteModal()"><mat-icon>close</mat-icon></button>
+        </div>
+        <p class="panel-hint">¿Estás seguro de que deseas eliminar este acompañante? Esta acción no se puede deshacer.
+        </p>
+        <div class="companion-actions" style="margin-top: 24px;">
+          <button mat-stroked-button (click)="closeDeleteModal()">Cancelar</button>
+          <button mat-flat-button color="warn" (click)="executeDeleteCompanion()">
+            <mat-icon>delete_forever</mat-icon> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+    }
   </div>
 </div>

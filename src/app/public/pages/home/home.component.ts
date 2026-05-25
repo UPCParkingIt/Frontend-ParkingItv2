@@ -67,6 +67,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   companionPreview = signal<string | null>(null);
   isUploading = signal(false);
   uploadedCompanions = signal<any[]>([]);
+  showDeleteModal = signal(false);
+  companionToDelete = signal<string | null>(null);
   private cameraStream: MediaStream | null = null;
 
   // Countdowns
@@ -295,14 +297,30 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteCompanion(id: string): void {
-    if (!confirm('¿Estás seguro de eliminar este acompañante?')) return;
+  confirmDeleteCompanion(id: string): void {
+    this.companionToDelete.set(id);
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal.set(false);
+    this.companionToDelete.set(null);
+  }
+
+  executeDeleteCompanion(): void {
+    const id = this.companionToDelete();
+    if (!id) return;
+
     this.companionService.deleteCompanion(id).subscribe({
       next: () => {
         this.uploadedCompanions.update(list => list.filter(c => c.id !== id));
         this.snackBar.open('Acompañante eliminado', 'OK', { duration: 3000 });
+        this.closeDeleteModal();
       },
-      error: () => this.snackBar.open('Error al eliminar', 'OK', { duration: 4000 })
+      error: () => {
+        this.snackBar.open('Error al eliminar', 'OK', { duration: 4000 });
+        this.closeDeleteModal();
+      }
     });
   }
 
