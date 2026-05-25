@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,6 +18,7 @@ import { ParkingService } from '../../../parking/services/parking.service';
 import { ParkingLotEntity } from '../../../parking/model/parking-lot.entity';
 import { AuthenticationService } from '../../../iam/services/authentication.service';
 import { CompanionService } from '../../../shared/services/companion.service';
+import { WebSocketService } from '../../../shared/services/websocket.service';
 
 @Component({
   selector: 'app-home',
@@ -43,9 +45,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   private parkingService = inject(ParkingService);
   private authService = inject(AuthenticationService);
   private companionService = inject(CompanionService);
+  private webSocketService = inject(WebSocketService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
   private timerInterval: any;
+  private wsSubscription?: Subscription;
 
   // Data
   reservations = signal<ReservationEntity[]>([]);
@@ -104,10 +108,26 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
     this.loadData();
     this.startCountdown();
+
+    this.wsSubscription = this.webSocketService.getStompClient().watch('/topic/companions/sync').subscribe((message) => {
+      try {
+        const data = JSON.parse(message.body);
+        if (data.action === 'COMPANION_VERIFIED' && data.companionId) {
+          this.uploadedCompanions.update(list => list.map(c => 
+            c.id === data.companionId ? { ...c, isVerified: true } : c
+          ));
+        }
+      } catch (e) {
+        console.error('Error parsing WS message', e);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     clearInterval(this.timerInterval);
+    if (this.wsSubscription) {
+      this.wsSubscription.unsubscribe();
+    }
   }
 
   loadData(): void {

@@ -43,9 +43,23 @@
 .companion-btn { border-color: var(--color-border) !important; color: var(--color-text-secondary) !important; height: 42px !important; }
 .companion-btn:hover { border-color: var(--color-primary) !important; color: var(--color-primary) !important; }
 
-/* ── Panel Overlay ───────────────────────── */
-.panel-overlay { margin-bottom: 32px; }
+/* ── Panel Overlay (Modal) ───────────────── */
+.panel-overlay { 
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
 .panel-card {
+  position: relative;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-lg);
@@ -355,10 +369,37 @@
 .companion-date { font-size: 12px; color: var(--color-text-muted); }
 
 /* ── Responsive ──────────────────────────── */
+/* ── Responsive ──────────────────────────── */
 @media (max-width: 768px) {
-  .stats-row { grid-template-columns: 1fr; }
+  .home-container { padding: 20px 16px; }
+  .welcome-title { font-size: 24px; }
+  
+  .stats-row { grid-template-columns: 1fr; gap: 12px; }
+  .stat-card { 
+    flex-direction: column !important; 
+    text-align: center; 
+    gap: 12px; 
+    padding: 16px;
+  }
+  
   .reservations-grid { grid-template-columns: 1fr; }
+  
   .companions-grid { grid-template-columns: 1fr; }
+  .companion-card { 
+    flex-direction: column !important; 
+    text-align: center; 
+    padding: 20px;
+  }
+  .companion-avatar { width: 80px; height: 80px; margin: 0 auto; }
+  .companion-status { justify-content: center; }
+  
   .action-buttons { flex-direction: column; }
   .hours-selector { flex-direction: column; }
+  
+  .panel-card { padding: 20px; }
+  .panel-header { flex-direction: column; text-align: center; gap: 12px; }
+  .panel-header button { align-self: flex-end; position: absolute; top: 12px; right: 12px; }
+  
+  .companion-actions { flex-direction: column; width: 100%; gap: 10px; }
+  .companion-actions button { width: 100%; }
 }
