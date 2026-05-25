@@ -20,11 +20,11 @@ export class CompanionService {
   private http = inject(HttpClient);
   private readonly apiUrl = `${environment.baseUrl}/authentication/companions`;
 
-  register(userId: string, photo: File): Observable<any> {
+  register(userId: string, photo: File): Observable<string> {
     const formData = new FormData();
     formData.append('faceImage', photo, photo.name);
 
-    return this.http.post(this.apiUrl, formData);
+    return this.http.post(this.apiUrl, formData, { responseType: 'text' });
   }
 
   getCompanions(): Observable<any[]> {
